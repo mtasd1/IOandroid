@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="location_options">
+        <item>Indoor</item>
+        <item>Outdoor</item>
+    </string-array>
+</resources>
