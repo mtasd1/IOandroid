@@ -1,5 +1,7 @@
 package com.example.ioandroid
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -73,12 +75,19 @@ class MainActivity : AppCompatActivity() {
             btnDelete.isEnabled = true
         }
 
+        listView.setOnItemLongClickListener { parent, view, position, id ->
+            val selectedItem = parent.getItemAtPosition(position) as GpsEntry
+            copyToClipboard(selectedItem.toString())
+            true
+        }
+
+
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
             val gpsData = fusedLocationService.getLocation()
-            Toast.makeText(this, "this data $gpsData", Toast.LENGTH_SHORT).show()
             val selectedLocation = spinnerLocation.selectedItem.toString()
-            val gpsEntry = GpsEntry("GPS accuracy of " + gpsData?.accuracy, selectedLocation)
+            val gpsEntry = GpsEntry("GPS accuracy of " + gpsData, selectedLocation)
+            Toast.makeText(this, gpsData.toString(), Toast.LENGTH_SHORT).show()
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()
 
@@ -92,7 +101,6 @@ class MainActivity : AppCompatActivity() {
             if (selectedPosition != AdapterView.INVALID_POSITION) {
                 gpsEntries.removeAt(selectedPosition)
                 adapter.notifyDataSetChanged()
-                Toast.makeText(this, "Entry deleted", Toast.LENGTH_SHORT).show()
                 if(gpsEntries.isEmpty()) btnDelete.isEnabled = false
 
                 saveEntriesToSharedPreferences()
@@ -120,6 +128,13 @@ class MainActivity : AppCompatActivity() {
         val savedEntries: List<GpsEntry> = gson.fromJson(json, type) ?: return
         gpsEntries.addAll(savedEntries)
         adapter.notifyDataSetChanged()
+    }
+
+    private fun copyToClipboard(text: String) {
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("label", text)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show()
     }
 
 }

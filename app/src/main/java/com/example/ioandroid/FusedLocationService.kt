@@ -4,54 +4,21 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.location.Location
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 
-class FusedLocationService {
-    private lateinit var fusedLocationClient : FusedLocationProviderClient;
-    private lateinit var context: Activity;
+class FusedLocationService(private val activity: Activity) {
+    private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity);
     private var currentLocation: Location? = null;
-    private lateinit var locationCallback: LocationCallback;
-
-    //create a constructor
-    constructor(activity: Activity) {
-        context = activity;
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                super.onLocationResult(p0)
-                p0.lastLocation?.let {
-                    currentLocation = it
-                }
-            }
-        }
-    }
-
-    //create function to get the location
-    private fun updateLocation() {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(context, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-        }
-        else {
-         // permissions are granted now get the location and return it as a string
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location ->
-                    if (location != null) {
-                        locationCallback.onLocationResult(LocationResult.create(listOf(location)))
-
-                        currentLocation = location
-                        Toast.makeText(context, "GPS with accuracy of " + currentLocation!!.accuracy, Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Location is null", Toast.LENGTH_SHORT).show()
-                    }
-                }
+    private var isLocationUpdating: Boolean = false;
+    private var locationCallback: LocationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            super.onLocationResult(locationResult)
+            currentLocation = locationResult.lastLocation
         }
     }
 
@@ -59,4 +26,48 @@ class FusedLocationService {
         updateLocation();
         return currentLocation;
     }
+
+    private fun updateLocation() {
+        startLocationUpdates()
+        stopLocationUpdates()
+    }
+
+    private fun startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+            && ActivityCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
+            startLocationUpdates()
+        } else {
+            if (!isLocationUpdating) {
+                val locationRequest = createLocationRequest()
+                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+                isLocationUpdating = true
+            }
+        }
+    }
+
+
+    private fun stopLocationUpdates() {
+        if(isLocationUpdating) {
+            isLocationUpdating = false
+        }
+    }
+
+    private fun createLocationRequest(): LocationRequest {
+        return LocationRequest.create().apply {
+            interval = 10
+            fastestInterval = 5
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+    }
+
+
 }
