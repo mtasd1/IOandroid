@@ -25,7 +25,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="20dp"
-        android:text="Track" />
+        android:text="Location not available yet" />
 
     <ListView
         android:id="@+id/listView"

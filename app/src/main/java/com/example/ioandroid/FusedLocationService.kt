@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.location.Location
+import android.widget.Button
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -12,24 +13,26 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 
 class FusedLocationService(private val activity: Activity) {
-    private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity);
-    private var currentLocation: Location? = null;
-    private var isLocationUpdating: Boolean = false;
+    private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
+    private var currentLocation: Location? = null
+    private val trackButton: Button = activity.findViewById(R.id.btnTrack)
     private var locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
-            currentLocation = locationResult.lastLocation
+            locationResult.lastLocation?.let {
+                currentLocation = it
+                enableTrackButton()
+            }
         }
     }
 
     fun getLocation(): Location? {
-        updateLocation();
-        return currentLocation;
+        updateLocation()
+        return currentLocation
     }
 
     private fun updateLocation() {
         startLocationUpdates()
-        stopLocationUpdates()
     }
 
     private fun startLocationUpdates() {
@@ -46,19 +49,12 @@ class FusedLocationService(private val activity: Activity) {
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
             startLocationUpdates()
         } else {
-            if (!isLocationUpdating) {
-                val locationRequest = createLocationRequest()
-                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-                isLocationUpdating = true
-            }
+            fusedLocationClient.requestLocationUpdates(createLocationRequest(), locationCallback, null)
         }
     }
 
-
     private fun stopLocationUpdates() {
-        if(isLocationUpdating) {
-            isLocationUpdating = false
-        }
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun createLocationRequest(): LocationRequest {
@@ -69,5 +65,8 @@ class FusedLocationService(private val activity: Activity) {
         }
     }
 
-
+    private fun enableTrackButton() {
+        trackButton.isEnabled = true
+        trackButton.text = "Track"
+    }
 }

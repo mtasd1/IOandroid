@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize the FusedLocationService
         fusedLocationService = FusedLocationService(this)
+        fusedLocationService.getLocation()
 
 
         // Adapter for the Spinner
@@ -71,26 +72,31 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        listView.setOnItemClickListener { _, _, position, _ ->
+        listView.setOnItemClickListener { _, _, _, _ ->
             btnDelete.isEnabled = true
         }
 
-        listView.setOnItemLongClickListener { parent, view, position, id ->
+        listView.setOnItemLongClickListener { parent, _, position, _ ->
             val selectedItem = parent.getItemAtPosition(position) as GpsEntry
             copyToClipboard(selectedItem.toString())
             true
         }
 
+        //initially disable the track button and it will be enabled when a location is available
+        btnTrack.isEnabled = false
 
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
-            val gpsData = fusedLocationService.getLocation()
+            var gpsData = fusedLocationService.getLocation()
+            if (gpsData == null) {
+                Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val selectedLocation = spinnerLocation.selectedItem.toString()
-            val gpsEntry = GpsEntry("GPS accuracy of " + gpsData, selectedLocation)
+            val gpsEntry = GpsEntry(gpsData, selectedLocation)
             Toast.makeText(this, gpsData.toString(), Toast.LENGTH_SHORT).show()
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()
-
             saveEntriesToSharedPreferences()
         }
 
