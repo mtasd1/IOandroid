@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     // The app will work with the FusedLocationProviderClient or the LocationManager depending on the value of this variable
     private val isFusedLocationProvider = true
-    private lateinit var fusedLocationService: FusedLocationService
+    private lateinit var selectedService: LocationService
 
 
     private val PREFS_NAME = "MyPrefsFile"
@@ -39,9 +39,13 @@ class MainActivity : AppCompatActivity() {
         val listView: ListView = findViewById(R.id.listView)
         val btnDelete: Button = findViewById(R.id.btnDelete)
 
-        // Initialize the FusedLocationService
-        fusedLocationService = FusedLocationService(this)
-        fusedLocationService.getLocation()
+        // Initialize the selected service
+        if (isFusedLocationProvider) {
+            selectedService = FusedLocationService(this)
+            selectedService.getLocation() //this is needed to start the location updates and enable the track button
+        } else {
+            selectedService = LocationManagerService(this)
+        }
 
 
         // Adapter for the Spinner
@@ -87,13 +91,13 @@ class MainActivity : AppCompatActivity() {
 
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
-            var gpsData = fusedLocationService.getLocation()
+            val gpsData = selectedService.getLocation()
             if (gpsData == null) {
                 Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val selectedLocation = spinnerLocation.selectedItem.toString()
-            val gpsEntry = GpsEntry(gpsData, selectedLocation)
+            val gpsEntry = GpsEntry(gpsData.toString(), selectedLocation)
             Toast.makeText(this, gpsData.toString(), Toast.LENGTH_SHORT).show()
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()

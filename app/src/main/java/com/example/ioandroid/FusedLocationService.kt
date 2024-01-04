@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Looper
 import android.widget.Button
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -12,7 +13,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 
-class FusedLocationService(private val activity: Activity) {
+class FusedLocationService(private val activity: Activity) : LocationService {
     private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
     private var currentLocation: Location? = null
     private val trackButton: Button = activity.findViewById(R.id.btnTrack)
@@ -26,7 +27,7 @@ class FusedLocationService(private val activity: Activity) {
         }
     }
 
-    fun getLocation(): Location? {
+    override fun getLocation(): Location? {
         updateLocation()
         return currentLocation
     }
@@ -49,12 +50,8 @@ class FusedLocationService(private val activity: Activity) {
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
             startLocationUpdates()
         } else {
-            fusedLocationClient.requestLocationUpdates(createLocationRequest(), locationCallback, null)
+            fusedLocationClient.requestLocationUpdates(createLocationRequest(), locationCallback, Looper.myLooper())
         }
-    }
-
-    private fun stopLocationUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun createLocationRequest(): LocationRequest {
