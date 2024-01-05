@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import android.widget.Button
+import android.widget.Spinner
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -17,6 +18,7 @@ class FusedLocationService(private val activity: Activity) : LocationService {
     private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
     private var currentLocation: Location? = null
     private val trackButton: Button = activity.findViewById(R.id.btnTrack)
+    private val spinnerLocation: Spinner = activity.findViewById(R.id.spinnerLocation)
     private var locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
@@ -63,7 +65,9 @@ class FusedLocationService(private val activity: Activity) : LocationService {
     }
 
     private fun enableTrackButton() {
-        trackButton.isEnabled = true
-        trackButton.text = "Track"
+        if (!trackButton.isEnabled && currentLocation != null&& spinnerLocation.selectedItem != null) {
+            trackButton.isEnabled = true
+            trackButton.text = "Track"
+        }
     }
 }

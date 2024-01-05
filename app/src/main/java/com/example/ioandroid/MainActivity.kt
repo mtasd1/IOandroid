@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.text.SimpleDateFormat
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,7 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ArrayAdapter<GpsEntry>
 
     // The app will work with the FusedLocationProviderClient or the LocationManager depending on the value of this variable
-    private val isFusedLocationProvider = true
+    private val isFusedLocationProvider = false
     private lateinit var selectedService: LocationService
 
 
@@ -45,7 +46,10 @@ class MainActivity : AppCompatActivity() {
             selectedService.getLocation() //this is needed to start the location updates and enable the track button
         } else {
             selectedService = LocationManagerService(this)
+            selectedService.getLocation() //this is needed to start the location updates and enable the track button
         }
+
+        btnTrack.isEnabled = false
 
 
         // Adapter for the Spinner
@@ -68,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         // Set a listener to handle the item selection in the Spinner
         spinnerLocation.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parentView: AdapterView<*>?, selectedItemView: View?, position: Int, id: Long) {
-                btnTrack.isEnabled = true
+
             }
 
             override fun onNothingSelected(parentView: AdapterView<*>?) {
@@ -86,9 +90,6 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        //initially disable the track button and it will be enabled when a location is available
-        btnTrack.isEnabled = false
-
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
             val gpsData = selectedService.getLocation()
@@ -97,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             val selectedLocation = spinnerLocation.selectedItem.toString()
-            val gpsEntry = GpsEntry(gpsData.toString(), selectedLocation)
+            val gpsEntry = GpsEntry(SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(gpsData.time), gpsData.toString(), selectedLocation)
             Toast.makeText(this, gpsData.toString(), Toast.LENGTH_SHORT).show()
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()
