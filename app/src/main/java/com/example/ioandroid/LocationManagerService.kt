@@ -15,7 +15,7 @@ import androidx.core.app.ActivityCompat
 
 class LocationManagerService(private var activity: Activity): LocationService {
     private val locationManager = activity.getSystemService(Activity.LOCATION_SERVICE) as LocationManager
-    private val provider = locationManager.getProvider(LocationManager.GPS_PROVIDER)
+    private val provider = LocationManager.GPS_PROVIDER
     private var currentLocation: Location? = null
     val satellites = mutableListOf<Pair<Int,Float>>()
     private val trackButton: Button = activity.findViewById(R.id.btnTrack)
@@ -27,6 +27,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
             enableTrackButton()
         }
     }
+
     val gnssStatusCallback = object: GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
             super.onSatelliteStatusChanged(status)
@@ -71,7 +72,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
     private fun startLocationUpdates() {
         unregisterGNSSStatusCallback()
         checkPermissions()
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 1f, locationListener)
+        locationManager.requestLocationUpdates(provider, 1, 1f, locationListener)
     }
 
     private fun unregisterGNSSStatusCallback() {

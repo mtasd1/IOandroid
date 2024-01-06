@@ -41,13 +41,12 @@ class MainActivity : AppCompatActivity() {
         val btnDelete: Button = findViewById(R.id.btnDelete)
 
         // Initialize the selected service
-        if (isFusedLocationProvider) {
-            selectedService = FusedLocationService(this)
-            selectedService.getLocation() //this is needed to start the location updates and enable the track button
+        selectedService = if (isFusedLocationProvider) {
+            FusedLocationService(this)
         } else {
-            selectedService = LocationManagerService(this)
-            selectedService.getLocation() //this is needed to start the location updates and enable the track button
+            LocationManagerService(this)
         }
+        selectedService.getLocation()
 
         btnTrack.isEnabled = false
 
