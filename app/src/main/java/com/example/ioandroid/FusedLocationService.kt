@@ -1,21 +1,9 @@
 package com.example.ioandroid
 
-import android.Manifest
 import android.app.Activity
-import android.content.pm.PackageManager
-import android.location.Location
-import android.os.Looper
-import android.widget.Button
-import android.widget.Spinner
-import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
 
-class FusedLocationService(private val activity: Activity) : LocationService {
-    private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
+class FusedLocationService(private val activity: Activity) /*: LocationService*/ {
+    /*private var fusedLocationClient : FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
     private var currentLocation: Location? = null
     private val trackButton: Button = activity.findViewById(R.id.btnTrack)
     private val spinnerLocation: Spinner = activity.findViewById(R.id.spinnerLocation)
@@ -32,6 +20,10 @@ class FusedLocationService(private val activity: Activity) : LocationService {
     override fun getLocation(): Location? {
         updateLocation()
         return currentLocation
+    }
+
+    override fun getSatelliteInfo(): String {
+        return ""
     }
 
     private fun updateLocation() {
@@ -69,5 +61,5 @@ class FusedLocationService(private val activity: Activity) : LocationService {
             trackButton.isEnabled = true
             trackButton.text = "Track"
         }
-    }
+    }*/
 }

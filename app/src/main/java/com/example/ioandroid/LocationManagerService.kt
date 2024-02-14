@@ -8,52 +8,71 @@ import android.location.GnssStatus
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 
 class LocationManagerService(private var activity: Activity): LocationService {
     private val locationManager = activity.getSystemService(Activity.LOCATION_SERVICE) as LocationManager
-    private val provider = LocationManager.GPS_PROVIDER
-    private var currentLocation: Location? = null
-    val satellites = mutableListOf<Pair<Int,Float>>()
+    private var currentLocationGPS: Location? = null
+    private var currentLocationNetwork: Location? = null
+    private val satellites = mutableListOf<Pair<Int,Float>>()
+    private var nrSatellitesInFix = 0
+    private var nrSatellitesInView = 0
+    private var satellitesText = ""
     private val trackButton: Button = activity.findViewById(R.id.btnTrack)
     private val spinnerLocation: Spinner = activity.findViewById(R.id.spinnerLocation)
 
-    private val locationListener: LocationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location) {
-            currentLocation = location
+    private val locationListenerGPS: LocationListener =
+        LocationListener { location ->
+            currentLocationGPS = location
             enableTrackButton()
         }
-    }
+
+    private val locationListenerNetwork: LocationListener =
+        LocationListener { location ->
+            currentLocationNetwork = location
+            enableTrackButton()
+        }
 
     val gnssStatusCallback = object: GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
             super.onSatelliteStatusChanged(status)
             satellites.clear()
-            for (i in 0 until status.satelliteCount) {
+            nrSatellitesInFix = 0
+            nrSatellitesInView = status.satelliteCount
+            for (i in 0 until nrSatellitesInView) {
                 if(status.usedInFix(i)){
                     satellites.add(Pair(status.getSvid(i), status.getCn0DbHz(i)))
+                    nrSatellitesInFix++
                 }
             }
             //sort the satellites by their signal strength
             satellites.sortByDescending { it.second }
-            Toast.makeText(activity, "Satellites: ${satellites}", Toast.LENGTH_SHORT).show()
+            satellitesText = satellites.toString()
+            Toast.makeText(activity, "in View: $nrSatellitesInView in Fix: $nrSatellitesInFix \n $satellitesText", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun enableTrackButton() {
-        if (!trackButton.isEnabled && currentLocation != null && spinnerLocation.selectedItem != null) {
+        if (!trackButton.isEnabled && (currentLocationGPS != null || currentLocationNetwork != null) && spinnerLocation.selectedItem != null) {
             trackButton.isEnabled = true
             trackButton.text = "Track"
         }
     }
 
-    override fun getLocation(): Location? {
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun getLocation(): Pair<Location?, Location?> {
         updateLocation()
         getIDsOfSatellites()
-        return currentLocation
+        return Pair(currentLocationNetwork, currentLocationGPS)
+    }
+
+    override fun getSatelliteInfo(): String {
+        return satellitesText
     }
 
     @SuppressLint("MissingPermission")
@@ -63,13 +82,16 @@ class LocationManagerService(private var activity: Activity): LocationService {
         return satellites
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     private fun updateLocation() {
-        startLocationUpdates()
+        startLocationUpdates(LocationManager.GPS_PROVIDER, locationListenerGPS)
+        startLocationUpdates(LocationManager.NETWORK_PROVIDER, locationListenerNetwork)
     }
 
     //This method is called only once to start the location updates, after that the locationListener will be called
+    @RequiresApi(Build.VERSION_CODES.R)
     @SuppressLint("MissingPermission")
-    private fun startLocationUpdates() {
+    private fun startLocationUpdates(provider: String, locationListener: LocationListener) {
         unregisterGNSSStatusCallback()
         checkPermissions()
         locationManager.requestLocationUpdates(provider, 1, 1f, locationListener)

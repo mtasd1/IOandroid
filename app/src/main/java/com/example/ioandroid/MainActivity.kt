@@ -41,11 +41,12 @@ class MainActivity : AppCompatActivity() {
         val btnDelete: Button = findViewById(R.id.btnDelete)
 
         // Initialize the selected service
-        selectedService = if (isFusedLocationProvider) {
+        /*selectedService = if (isFusedLocationProvider) {
             FusedLocationService(this)
         } else {
             LocationManagerService(this)
-        }
+        }*/
+        selectedService = LocationManagerService(this)
         selectedService.getLocation()
 
         btnTrack.isEnabled = false
@@ -92,13 +93,15 @@ class MainActivity : AppCompatActivity() {
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
             val gpsData = selectedService.getLocation()
-            if (gpsData == null) {
+            val satellites = selectedService.getSatelliteInfo()
+            if (gpsData.first == null && gpsData.second == null) {
                 Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val selectedLocation = spinnerLocation.selectedItem.toString()
-            val gpsEntry = GpsEntry(SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(gpsData.time), gpsData.toString(), selectedLocation)
-            Toast.makeText(this, gpsData.toString(), Toast.LENGTH_SHORT).show()
+            val dateFormat = SimpleDateFormat("HH:mm:ss")
+            Toast.makeText(this, "vAccuracy: ${gpsData.first?.verticalAccuracyMeters} ", Toast.LENGTH_SHORT).show()
+            val gpsEntry = GpsEntry(selectedLocation, gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.first.toString(), gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.second.toString(), satellites)
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()
             saveEntriesToSharedPreferences()
