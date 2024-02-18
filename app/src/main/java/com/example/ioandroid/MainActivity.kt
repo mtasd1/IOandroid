@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ExpandableListView
 import android.widget.ListView
 import android.widget.Spinner
 import android.widget.Toast
@@ -21,12 +22,13 @@ import java.text.SimpleDateFormat
 class MainActivity : AppCompatActivity() {
 
     private val gpsEntries = mutableListOf<GpsEntry>()
-    private lateinit var adapter: ArrayAdapter<GpsEntry>
+    //private lateinit var adapter: ArrayAdapter<GpsEntry>
+    private lateinit var adapter: ExpandableListAdapter;
 
-    // The app will work with the FusedLocationProviderClient or the LocationManager depending on the value of this variable
-    private val isFusedLocationProvider = false
-    private lateinit var selectedService: LocationService
-
+    private lateinit var locationService: LocationService
+    private lateinit var telephoneService: TelephoneService
+    private lateinit var wifiService: WifiService
+    private lateinit var bluetoothService: BluetoothService
 
     private val PREFS_NAME = "MyPrefsFile"
 
@@ -37,19 +39,19 @@ class MainActivity : AppCompatActivity() {
 
         val spinnerLocation: Spinner = findViewById(R.id.spinnerLocation)
         val btnTrack: Button = findViewById(R.id.btnTrack)
-        val listView: ListView = findViewById(R.id.listView)
+        val listView: ExpandableListView = findViewById(R.id.expandableListView)
         val btnDelete: Button = findViewById(R.id.btnDelete)
+        var selectedGroupPosition = AdapterView.INVALID_POSITION
 
-        // Initialize the selected service
-        /*selectedService = if (isFusedLocationProvider) {
-            FusedLocationService(this)
-        } else {
-            LocationManagerService(this)
-        }*/
-        selectedService = LocationManagerService(this)
-        selectedService.getLocation()
+
+
+        locationService = LocationManagerService(this)
+        locationService.getLocation() // call the function when creating to initialize the Location
+
+        bluetoothService = BluetoothService(this)
 
         btnTrack.isEnabled = false
+        btnDelete.isEnabled = false
 
 
         // Adapter for the Spinner
@@ -62,8 +64,8 @@ class MainActivity : AppCompatActivity() {
         spinnerLocation.adapter = labelAdapter
 
         // Adapter for the ListView
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_single_choice, gpsEntries)
-        listView.adapter = adapter
+        adapter = ExpandableListAdapter(this, gpsEntries)
+        listView.setAdapter(adapter)
         listView.choiceMode = ListView.CHOICE_MODE_SINGLE
 
         // Load saved entries from SharedPreferences
@@ -80,8 +82,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        listView.setOnItemClickListener { _, _, _, _ ->
+        listView.setOnGroupClickListener { _, _, groupPosition, _ ->
+            selectedGroupPosition = groupPosition
             btnDelete.isEnabled = true
+            false
         }
 
         listView.setOnItemLongClickListener { parent, _, position, _ ->
@@ -92,15 +96,17 @@ class MainActivity : AppCompatActivity() {
 
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
-            val gpsData = selectedService.getLocation()
-            val satellites = selectedService.getSatelliteInfo()
+            val gpsData = locationService.getLocation()
+            val satellites = locationService.getSatelliteInfo()
             if (gpsData.first == null && gpsData.second == null) {
                 Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val selectedLocation = spinnerLocation.selectedItem.toString()
             val dateFormat = SimpleDateFormat("HH:mm:ss")
-            Toast.makeText(this, "vAccuracy: ${gpsData.first?.verticalAccuracyMeters} ", Toast.LENGTH_SHORT).show()
+            bluetoothService.startDiscovery()
+            Toast.makeText(this, "Bluetooth devices: ${bluetoothService.bluetoothDevices}", Toast.LENGTH_SHORT).show()
+
             val gpsEntry = GpsEntry(selectedLocation, gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.first.toString(), gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.second.toString(), satellites)
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()
@@ -109,13 +115,10 @@ class MainActivity : AppCompatActivity() {
 
         // Set a listener for the Delete button
         btnDelete.setOnClickListener {
-
-            val selectedPosition = listView.checkedItemPosition
-            if (selectedPosition != AdapterView.INVALID_POSITION) {
-                gpsEntries.removeAt(selectedPosition)
-                adapter.notifyDataSetChanged()
-                if(gpsEntries.isEmpty()) btnDelete.isEnabled = false
-
+            Toast.makeText(this, "Pos: $selectedGroupPosition", Toast.LENGTH_SHORT).show()
+            if (selectedGroupPosition != AdapterView.INVALID_POSITION) {
+                adapter.removeGroup(selectedGroupPosition)
+                if (gpsEntries.isEmpty()) btnDelete.isEnabled = false
                 saveEntriesToSharedPreferences()
             } else {
                 Toast.makeText(this, "No entry selected", Toast.LENGTH_SHORT).show()

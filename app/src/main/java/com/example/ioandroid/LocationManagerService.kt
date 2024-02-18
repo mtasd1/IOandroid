@@ -11,7 +11,6 @@ import android.location.LocationManager
 import android.os.Build
 import android.widget.Button
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 
@@ -53,7 +52,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
             //sort the satellites by their signal strength
             satellites.sortByDescending { it.second }
             satellitesText = satellites.toString()
-            Toast.makeText(activity, "in View: $nrSatellitesInView in Fix: $nrSatellitesInFix \n $satellitesText", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(activity, "in View: $nrSatellitesInView in Fix: $nrSatellitesInFix \n $satellitesText", Toast.LENGTH_SHORT).show()
         }
     }
 

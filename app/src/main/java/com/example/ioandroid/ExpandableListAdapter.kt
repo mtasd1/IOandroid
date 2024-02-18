@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 
-class ExpandableListAdapter(private val context: Context, private val entries: List<GpsEntry>) :
+class ExpandableListAdapter(private val context: Context, private val entries: MutableList<GpsEntry>) :
     BaseExpandableListAdapter() {
 
     override fun getGroupCount(): Int {
@@ -51,7 +51,7 @@ class ExpandableListAdapter(private val context: Context, private val entries: L
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val view = inflater.inflate(android.R.layout.simple_expandable_list_item_1, null)
         val text = view.findViewById<TextView>(android.R.id.text1)
-        text.text = entries[groupPosition].label
+        text.text = entries[groupPosition].label + " " + groupPosition
         return view
     }
 
@@ -75,5 +75,10 @@ class ExpandableListAdapter(private val context: Context, private val entries: L
 
     override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean {
         return false
+    }
+
+    fun removeGroup(groupPosition: Int) {
+        entries.removeAt(groupPosition)
+        notifyDataSetChanged()
     }
 }
