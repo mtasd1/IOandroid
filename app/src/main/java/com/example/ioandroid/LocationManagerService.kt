@@ -18,7 +18,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
     private val locationManager = activity.getSystemService(Activity.LOCATION_SERVICE) as LocationManager
     private var currentLocationGPS: Location? = null
     private var currentLocationNetwork: Location? = null
-    private val satellites = mutableListOf<Pair<Int,Float>>()
+    private val satellites = mutableListOf<Triple<String, Int,Float>>()
     private var nrSatellitesInFix = 0
     private var nrSatellitesInView = 0
     private var satellitesText = ""
@@ -44,8 +44,10 @@ class LocationManagerService(private var activity: Activity): LocationService {
             nrSatellitesInFix = 0
             nrSatellitesInView = status.satelliteCount
             for (i in 0 until nrSatellitesInView) {
+                //check if satellite is from gps, glonass, galileo or beidou
+                val isGPS = status.getConstellationType(i) == GnssStatus.CONSTELLATION_GPS
                 if(status.usedInFix(i)){
-                    satellites.add(Pair(status.getSvid(i), status.getCn0DbHz(i)))
+                    satellites.add(Triple(getConstellationTypeString(status.getConstellationType(i)), status.getSvid(i), status.getCn0DbHz(i)))
                     nrSatellitesInFix++
                 }
             }
@@ -75,7 +77,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
     }
 
     @SuppressLint("MissingPermission")
-    private fun getIDsOfSatellites(): List<Pair<Int,Float>> {
+    private fun getIDsOfSatellites(): List<Triple<String,Int,Float>> {
         checkPermissions()
         locationManager.registerGnssStatusCallback(gnssStatusCallback)
         return satellites
@@ -111,5 +113,15 @@ class LocationManagerService(private var activity: Activity): LocationService {
         ) {
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1) }
+    }
+
+    private fun getConstellationTypeString(constellation: Int): String {
+        return when (constellation) {
+            GnssStatus.CONSTELLATION_GPS -> "GPS"
+            GnssStatus.CONSTELLATION_GLONASS -> "GLONASS"
+            GnssStatus.CONSTELLATION_BEIDOU -> "BEIDOU"
+            GnssStatus.CONSTELLATION_GALILEO -> "GALILEO"
+            else -> "UNKNOWN"
+        }
     }
 }

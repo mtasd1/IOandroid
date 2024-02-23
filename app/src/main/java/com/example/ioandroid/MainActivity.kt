@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.util.ArrayMap
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -49,6 +50,12 @@ class MainActivity : AppCompatActivity() {
         locationService.getLocation() // call the function when creating to initialize the Location
 
         bluetoothService = BluetoothService(this)
+        bluetoothService.startDiscovery()
+
+        wifiService = WifiService(this)
+        wifiService.enableWifi()
+
+        telephoneService = TelephoneService(this)
 
         btnTrack.isEnabled = false
         btnDelete.isEnabled = false
@@ -104,10 +111,19 @@ class MainActivity : AppCompatActivity() {
             }
             val selectedLocation = spinnerLocation.selectedItem.toString()
             val dateFormat = SimpleDateFormat("HH:mm:ss")
-            bluetoothService.startDiscovery()
-            Toast.makeText(this, "Bluetooth devices: ${bluetoothService.bluetoothDevices}", Toast.LENGTH_SHORT).show()
 
-            val gpsEntry = GpsEntry(selectedLocation, gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.first.toString(), gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.second.toString(), satellites)
+            bluetoothService.startDiscovery()
+            val blDevices = bluetoothService.getDevices()
+
+            val wifiNetworks = wifiService.getWifiNetworks()
+
+            val cellStrength = telephoneService.getSignalStrength()
+            val cellType = telephoneService.getNetworkType(this)
+            //Toast.makeText(this, "Bluetooth devices: ${bluetoothService.getDevices()}", Toast.LENGTH_SHORT).show()
+            val networkExtras = bundleToMap(gpsData.first?.extras ?: Bundle())
+            val gpsExtras = bundleToMap(gpsData.second?.extras ?: Bundle())
+
+            val gpsEntry = GpsEntry(selectedLocation, cellStrength.toString(),  gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.first.toString(), networkExtras.toString(), gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.second.toString(), gpsExtras.toString(),satellites, blDevices.toString(), wifiNetworks.toString(), wifiNetworks.size)
             gpsEntries.add(gpsEntry)
             adapter.notifyDataSetChanged()
             saveEntriesToSharedPreferences()
@@ -153,4 +169,16 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show()
     }
 
+    fun bundleToMap(bundle: Bundle): ArrayMap<String, Any> {
+        val map = ArrayMap<String, Any>()
+        for (key in bundle.keySet()) {
+            val value = bundle.get(key)
+            if (value is Bundle) {
+                map[key] = bundleToMap(value)
+            } else {
+                map[key] = value!!
+            }
+        }
+        return map
+    }
 }
