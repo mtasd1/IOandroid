@@ -14,11 +14,12 @@ import android.util.ArrayMap
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
+import org.json.JSONObject
 
 class BluetoothService(private val context: Context) {
-    private val bluetoothManager: BluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private val bluetoothDevices = ArrayMap<BluetoothDevice, Triple<Int, Pair<Int, String>, String>>()
+    private var meanCn0 = 0.0f
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -50,6 +51,7 @@ class BluetoothService(private val context: Context) {
                 }
 
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    Toast.makeText(context, "Discovery finished", Toast.LENGTH_SHORT).show()
                     stopDiscovery()
                 }
             }
@@ -82,10 +84,9 @@ class BluetoothService(private val context: Context) {
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
         context.registerReceiver(receiver, filter)
+        Toast.makeText(context, "Starting discovery", Toast.LENGTH_SHORT).show()
 
-        while (bluetoothAdapter.isDiscovering) {
-            // do nothing
-        }
+        bluetoothAdapter.startDiscovery()
     }
 
     fun stopDiscovery() {
@@ -104,11 +105,6 @@ class BluetoothService(private val context: Context) {
         Toast.makeText(context, "Stopping discovery with ${bluetoothDevices.size} devices found", Toast.LENGTH_SHORT).show()
         bluetoothAdapter?.cancelDiscovery()
         context.unregisterReceiver(receiver)
-    }
-
-    fun getDevices(): ArrayMap<BluetoothDevice, Triple<Int, Pair<Int, String>, String>> {
-        Toast.makeText(context, "Bluetooth devices: $bluetoothDevices", Toast.LENGTH_SHORT).show()
-        return bluetoothDevices
     }
 
     fun getDeviceType(deviceClassInt: Int?): String {
@@ -147,6 +143,83 @@ class BluetoothService(private val context: Context) {
 
     fun getDeviceName(device: BluetoothDevice?): String {
         return device?.name ?: ""
+    }
+
+    fun getMinCn0(): Int {
+        var minCn0 = 0
+
+        if(bluetoothDevices.isEmpty()) {
+            return 0
+        }
+
+        bluetoothDevices.forEach {
+            if((it.value?.first ?: 0) < minCn0) {
+                minCn0 = it.value.first
+            }
+        }
+        return minCn0
+    }
+
+    fun getMeanCn0(): Float {
+        meanCn0 = 0.0f
+
+        if(bluetoothDevices.isEmpty()) {
+            return meanCn0
+        }
+
+        bluetoothDevices.forEach {
+            meanCn0 += it.value.first
+        }
+        meanCn0 /= bluetoothDevices.size
+        return meanCn0
+    }
+
+    fun getMaxCn0(): Float {
+        var maxCn0 = -100.0f //minimum value for RSSI
+
+        if(bluetoothDevices.isEmpty()) {
+            return maxCn0
+        }
+
+        bluetoothDevices.forEach {
+            if(it.value.first > maxCn0) {
+                maxCn0 = it.value.first.toFloat()
+            }
+        }
+        return maxCn0
+    }
+
+    fun getDevicesJSON(): JSONObject {
+        val json = JSONObject()
+        for (entry in bluetoothDevices) {
+            val device = entry.key
+            val deviceInfo = entry.value
+            val deviceJSON = JSONObject()
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    context as MainActivity,
+                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION),
+                    1
+                )
+            }
+            deviceJSON.put("name", device.name ?: "Unknown")
+            deviceJSON.put("rssi", deviceInfo.first ?: "Unknown")
+            deviceJSON.put("class", deviceInfo.second.first ?: "Unknown")
+            deviceJSON.put("type", deviceInfo.second.second ?: "Unknown")
+            json.put(device.address, deviceJSON)
+        }
+        return json
+    }
+    fun getDevicesList(): ArrayMap<BluetoothDevice, Triple<Int, Pair<Int, String>, String>> {
+        return bluetoothDevices
+    }
+
+    fun getNrDevices(): Int {
+        return bluetoothDevices.size
     }
 
 }

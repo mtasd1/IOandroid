@@ -5,6 +5,8 @@ import android.content.ClipboardManager
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.ArrayMap
 import android.view.View
 import android.widget.AdapterView
@@ -31,7 +33,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiService: WifiService
     private lateinit var bluetoothService: BluetoothService
 
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val delay = 2000L
+    private val runnable = object : Runnable {
+        override fun run() {
+            trackLocation()
+            handler.postDelayed(this, delay)
+        }
+    }
+
     private val PREFS_NAME = "MyPrefsFile"
+
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         val spinnerLocation: Spinner = findViewById(R.id.spinnerLocation)
         val btnTrack: Button = findViewById(R.id.btnTrack)
+        val btnStopTrack: Button = findViewById(R.id.btnStopTrack)
         val listView: ExpandableListView = findViewById(R.id.expandableListView)
         val btnDelete: Button = findViewById(R.id.btnDelete)
         var selectedGroupPosition = AdapterView.INVALID_POSITION
@@ -58,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         telephoneService = TelephoneService(this)
 
         btnTrack.isEnabled = false
+        btnStopTrack.isEnabled = false
         btnDelete.isEnabled = false
 
 
@@ -81,11 +96,11 @@ class MainActivity : AppCompatActivity() {
         // Set a listener to handle the item selection in the Spinner
         spinnerLocation.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parentView: AdapterView<*>?, selectedItemView: View?, position: Int, id: Long) {
-
+                btnDelete.isEnabled = true
             }
 
             override fun onNothingSelected(parentView: AdapterView<*>?) {
-                btnTrack.isEnabled = false
+                btnDelete.isEnabled = false
             }
         }
 
@@ -103,30 +118,12 @@ class MainActivity : AppCompatActivity() {
 
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
-            val gpsData = locationService.getLocation()
-            val satellites = locationService.getSatelliteInfo()
-            if (gpsData.first == null && gpsData.second == null) {
-                Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            val selectedLocation = spinnerLocation.selectedItem.toString()
-            val dateFormat = SimpleDateFormat("HH:mm:ss")
+            // Label, cellStrength, cellType, timeStampNetwork, hAccuracyNetwork, vAccuracyNetwork, networkLocationType, timeStampGPS, hAccuracyGPS, vAccuracyGPS, nrSatellites, top7 Satellites, bluetoothDevices, wifiNetworks, nrWifiNetworks
+            trackLocation()
+        }
 
-            bluetoothService.startDiscovery()
-            val blDevices = bluetoothService.getDevices()
+        btnStopTrack.setOnClickListener {
 
-            val wifiNetworks = wifiService.getWifiNetworks()
-
-            val cellStrength = telephoneService.getSignalStrength()
-            val cellType = telephoneService.getNetworkType(this)
-            //Toast.makeText(this, "Bluetooth devices: ${bluetoothService.getDevices()}", Toast.LENGTH_SHORT).show()
-            val networkExtras = bundleToMap(gpsData.first?.extras ?: Bundle())
-            val gpsExtras = bundleToMap(gpsData.second?.extras ?: Bundle())
-
-            val gpsEntry = GpsEntry(selectedLocation, cellStrength.toString(),  gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.first.toString(), networkExtras.toString(), gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A", gpsData.second.toString(), gpsExtras.toString(),satellites, blDevices.toString(), wifiNetworks.toString(), wifiNetworks.size)
-            gpsEntries.add(gpsEntry)
-            adapter.notifyDataSetChanged()
-            saveEntriesToSharedPreferences()
         }
 
         // Set a listener for the Delete button
@@ -142,6 +139,104 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+    override fun onDestroy() {
+        super.onDestroy()
+        locationService.stopLocationUpdates()
+        bluetoothService.stopDiscovery()
+    }
+
+    private fun trackLocation() {
+        val gpsData = locationService.getLocation()
+        if (gpsData.first == null && gpsData.second == null) {
+            Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val selectedLocation = getSelectedLocation()
+        val dateFormat = SimpleDateFormat("HH:mm:ss")
+
+        val cellStrength = telephoneService.getSignalStrength()
+        val cellType = telephoneService.getNetworkType(this)
+
+        val timeStampNetwork = gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A"
+        val hAccuracyNetwork = gpsData.first?.accuracy ?: 0.0f
+        val vAccuracyNetwork = gpsData.first?.verticalAccuracyMeters ?: 0.0f
+        val bAccuracyNetwork = gpsData.first?.bearingAccuracyDegrees ?: 0.0f //probably not needed for our model
+        val speedAccuracyNetwork = gpsData.first?.speedAccuracyMetersPerSecond ?: 0.0f //probably not needed for our model
+        val networkExtras = bundleToMap(gpsData.first?.extras ?: Bundle())
+        val networkLocationType = networkExtras["networkLocationType"] ?: "N/A"
+
+        val timeStampGPS = gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A"
+        val hAccuracyGPS = gpsData.second?.accuracy ?: 0.0f
+        val vAccuracyGPS = gpsData.second?.verticalAccuracyMeters ?: 0.0f
+        val bAccuracyGPS = gpsData.second?.bearingAccuracyDegrees ?: 0.0f //probably not needed for our model
+        val speedAccuracyGPS = gpsData.second?.speedAccuracyMetersPerSecond ?: 0.0f //probably not needed for our model
+
+        val gpsExtras = bundleToMap(gpsData.second?.extras ?: Bundle())
+        val satellites = locationService.getSatelliteInfoJSON()
+        val nrSatellitesInFix = gpsExtras["satellites"] ?: satellites.length()
+        val nrSatellitesInView = (locationService as LocationManagerService).getSatellitesInView()
+        val minCn0GPS = (locationService as LocationManagerService).getMinCn0()
+        val meanCn0GPS = gpsExtras["meanCn0"] ?: 0.0f
+        val maxCn0GPS = gpsExtras["maxCn0"] ?: 0.0f
+        // if needed we will also calculate the mean and max Cn0 of the top 7 satellites
+
+
+        bluetoothService.startDiscovery()
+        val blDevices = bluetoothService.getDevicesJSON()
+
+        var nrBlDevices = bluetoothService.getNrDevices()
+        var minCn0Bl = bluetoothService.getMinCn0()
+        var meanCn0Bl = bluetoothService.getMeanCn0()
+        var maxCn0Bl = bluetoothService.getMaxCn0()
+
+        val wifiNetworks = wifiService.getWifiNetworksJSON()
+        var nrWifiDevices = wifiNetworks.length()
+        var minCn0Wifi = wifiService.getMinCn0(wifiNetworks)
+        var meanCn0Wifi = wifiService.getMeanCn0(wifiNetworks)
+        var maxCn0Wifi = wifiService.getMaxCn0(wifiNetworks)
+
+
+        val gpsEntry = GpsEntry(
+            selectedLocation,
+            cellStrength,
+            cellType,
+            timeStampNetwork,
+            hAccuracyNetwork,
+            vAccuracyNetwork,
+            bAccuracyNetwork,
+            speedAccuracyNetwork,
+            networkLocationType,
+            timeStampGPS,
+            hAccuracyGPS,
+            vAccuracyGPS,
+            bAccuracyGPS,
+            speedAccuracyGPS,
+            nrSatellitesInView,
+            nrSatellitesInFix,
+            minCn0GPS,
+            meanCn0GPS,
+            maxCn0GPS,
+            satellites,
+            nrBlDevices,
+            minCn0Bl,
+            meanCn0Bl,
+            maxCn0Bl,
+            blDevices,
+            nrWifiDevices,
+            minCn0Wifi,
+            meanCn0Wifi,
+            maxCn0Wifi,
+            wifiNetworks
+        )
+        gpsEntries.add(gpsEntry)
+        adapter.notifyDataSetChanged()
+        saveEntriesToSharedPreferences()
+    }
+
+    fun getSelectedLocation(): String {
+        return findViewById<Spinner>(R.id.spinnerLocation).selectedItem.toString()
+    }
 
     private fun saveEntriesToSharedPreferences() {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)

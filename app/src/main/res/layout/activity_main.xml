@@ -23,9 +23,18 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/spinnerLocation"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="20dp"
         android:text="Location not available yet" />
+
+    <Button
+        android:id="@+id/btnStopTrack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/btnTrack"
+        app:layout_constraintStart_toEndOf="@+id/btnTrack"
+        android:layout_marginStart="10dp"
+        android:text="Stop Tracking" />
+
 
     <ExpandableListView
         android:id="@+id/expandableListView"

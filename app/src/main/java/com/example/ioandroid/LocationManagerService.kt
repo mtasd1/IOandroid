@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.Spinner
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import org.json.JSONObject
 
 class LocationManagerService(private var activity: Activity): LocationService {
     private val locationManager = activity.getSystemService(Activity.LOCATION_SERVICE) as LocationManager
@@ -72,8 +73,43 @@ class LocationManagerService(private var activity: Activity): LocationService {
         return Pair(currentLocationNetwork, currentLocationGPS)
     }
 
-    override fun getSatelliteInfo(): String {
-        return satellitesText
+    override fun stopLocationUpdates() {
+        locationManager.removeUpdates(locationListenerGPS)
+        locationManager.removeUpdates(locationListenerNetwork)
+    }
+
+    override fun getSatelliteInfo(): List<Triple<String,Int,Float>> {
+        return satellites
+    }
+
+    override fun getSatelliteInfoJSON(): JSONObject {
+        val satellitesJSON = JSONObject()
+        for (i in 0 until satellites.size) {
+            val satellite = JSONObject()
+            satellite.put("constellation", satellites[i].first)
+            satellite.put("svid", satellites[i].second)
+            satellite.put("cn0", satellites[i].third)
+            satellitesJSON.put("satellite$i", satellite)
+        }
+        return satellitesJSON
+    }
+
+    fun getMinCn0(): Float {
+        if(satellites.isEmpty()
+        ) {
+            return 0.0f
+        }
+        var minCn0 = 100.0f
+        for (i in 0 until satellites.size) {
+            if (satellites[i].third < minCn0) {
+                minCn0 = satellites[i].third
+            }
+        }
+        return minCn0
+    }
+
+    fun getSatellitesInView(): Int {
+        return nrSatellitesInView
     }
 
     @SuppressLint("MissingPermission")

@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import androidx.core.app.ActivityCompat
+import org.json.JSONObject
 
 class WifiService(private val context: Context) {
     private val wifiManager: WifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -38,6 +39,18 @@ class WifiService(private val context: Context) {
         return wifiManager.scanResults
     }
 
+    fun getWifiNetworksJSON(): JSONObject {
+        val wifiNetworksJSON = JSONObject()
+        val wifiNetworks = getWifiNetworks()
+        for (i in 0 until wifiNetworks.size) {
+            val wifiNetwork = JSONObject()
+            wifiNetwork.put("SSID", wifiNetworks[i].SSID)
+            wifiNetwork.put("level", wifiNetworks[i].level)
+            wifiNetworksJSON.put("wifiNetwork$i", wifiNetwork)
+        }
+        return wifiNetworksJSON
+    }
+
     fun isWifiEnabled(): Boolean {
         return wifiManager.isWifiEnabled
     }
@@ -52,5 +65,37 @@ class WifiService(private val context: Context) {
         if (wifiManager.isWifiEnabled) {
             wifiManager.isWifiEnabled = false
         }
+    }
+
+    fun getMinCn0(JSON: JSONObject): Int {
+        var minCn0 = 0
+        for (i in 0 until JSON.length()) {
+            val wifiNetwork = JSON.getJSONObject("wifiNetwork$i")
+            if (wifiNetwork.getInt("level") < minCn0) {
+                minCn0 = wifiNetwork.getInt("level")
+            }
+        }
+        return minCn0
+    }
+
+    fun getMeanCn0(JSON: JSONObject): Float {
+        var meanCn0 = 0.0f
+        for (i in 0 until JSON.length()) {
+            val wifiNetwork = JSON.getJSONObject("wifiNetwork$i")
+            meanCn0 += wifiNetwork.getInt("level")
+        }
+        meanCn0 /= JSON.length()
+        return meanCn0
+    }
+
+    fun getMaxCn0(JSON: JSONObject): Int {
+        var maxCn0 = -100
+        for (i in 0 until JSON.length()) {
+            val wifiNetwork = JSON.getJSONObject("wifiNetwork$i")
+            if (wifiNetwork.getInt("level") > maxCn0) {
+                maxCn0 = wifiNetwork.getInt("level")
+            }
+        }
+        return maxCn0
     }
 }
