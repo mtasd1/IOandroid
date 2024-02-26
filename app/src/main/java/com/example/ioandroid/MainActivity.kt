@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
             handler.postDelayed(this, delay)
         }
     }
+    private var isTracking = false
 
     private val PREFS_NAME = "MyPrefsFile"
 
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         val btnStopTrack: Button = findViewById(R.id.btnStopTrack)
         val listView: ExpandableListView = findViewById(R.id.expandableListView)
         val btnDelete: Button = findViewById(R.id.btnDelete)
+        val btnDeleteAll: Button = findViewById(R.id.btnDeleteAll)
         var selectedGroupPosition = AdapterView.INVALID_POSITION
 
 
@@ -119,11 +121,15 @@ class MainActivity : AppCompatActivity() {
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
             // Label, cellStrength, cellType, timeStampNetwork, hAccuracyNetwork, vAccuracyNetwork, networkLocationType, timeStampGPS, hAccuracyGPS, vAccuracyGPS, nrSatellites, top7 Satellites, bluetoothDevices, wifiNetworks, nrWifiNetworks
-            trackLocation()
+            handler.post(runnable) // start the tracking
+            isTracking = true
+            btnStopTrack.isEnabled = true
         }
 
         btnStopTrack.setOnClickListener {
-
+            handler.removeCallbacks(runnable) // stop the tracking
+            isTracking = false
+            btnStopTrack.isEnabled = false
         }
 
         // Set a listener for the Delete button
@@ -136,6 +142,13 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "No entry selected", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // Set a listener for the Delete All button
+        btnDeleteAll.setOnClickListener {
+            gpsEntries.clear()
+            adapter.notifyDataSetChanged()
+            saveEntriesToSharedPreferences()
         }
     }
 
