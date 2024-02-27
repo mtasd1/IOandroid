@@ -2,11 +2,14 @@ package com.example.ioandroid
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ContentValues
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.util.ArrayMap
 import android.view.View
 import android.widget.AdapterView
@@ -20,6 +23,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 
 class MainActivity : AppCompatActivity() {
@@ -58,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         val listView: ExpandableListView = findViewById(R.id.expandableListView)
         val btnDelete: Button = findViewById(R.id.btnDelete)
         val btnDeleteAll: Button = findViewById(R.id.btnDeleteAll)
+        val btnExport: Button = findViewById(R.id.btnExport)
         var selectedGroupPosition = AdapterView.INVALID_POSITION
 
 
@@ -149,6 +154,14 @@ class MainActivity : AppCompatActivity() {
             gpsEntries.clear()
             adapter.notifyDataSetChanged()
             saveEntriesToSharedPreferences()
+        }
+
+        // Set a listener for the Export button
+        btnExport.setOnClickListener {
+            gpsEntries.clear()
+            val entries = loadEntriesFromSharedPreferences()
+            exportData(entries)
+            Toast.makeText(this, "Exported to CSV", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -260,14 +273,50 @@ class MainActivity : AppCompatActivity() {
         editor.apply()
     }
 
-    private fun loadEntriesFromSharedPreferences() {
+    private fun loadEntriesFromSharedPreferences(): List<GpsEntry> {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val gson = Gson()
         val json = prefs.getString("entries", "")
         val type = object : TypeToken<ArrayList<GpsEntry>>() {}.type
-        val savedEntries: List<GpsEntry> = gson.fromJson(json, type) ?: return
+        val savedEntries: List<GpsEntry> = gson.fromJson(json, type) ?: return emptyList()
         gpsEntries.addAll(savedEntries)
         adapter.notifyDataSetChanged()
+        return savedEntries
+    }
+
+    private fun exportData(entries: List<GpsEntry>) {
+        val resolver = contentResolver
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "gps_data.csv")
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS)
+        }
+
+        val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
+
+        resolver.openOutputStream(uri!!).use { outputStream ->
+            OutputStreamWriter(outputStream).use { writer ->
+                entries.forEach { entry ->
+                    writer.write(entry.toCSV())
+                    writer.write("\n") // New line for each entry
+                }
+            }
+        }
+    }
+
+    private fun createFile() {
+        val resolver = contentResolver
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "gps_data.csv")
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS)
+        }
+
+        val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
+
+        resolver.openOutputStream(uri!!).use { outputStream ->
+            // Write your data here
+        }
     }
 
     private fun copyToClipboard(text: String) {

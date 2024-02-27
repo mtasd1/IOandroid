@@ -51,7 +51,7 @@ class BluetoothService(private val context: Context) {
                 }
 
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    Toast.makeText(context, "Discovery finished", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "Discovery finished", Toast.LENGTH_SHORT).show()
                     stopDiscovery()
                 }
             }
@@ -84,7 +84,7 @@ class BluetoothService(private val context: Context) {
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
         context.registerReceiver(receiver, filter)
-        Toast.makeText(context, "Starting discovery", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(context, "Starting discovery", Toast.LENGTH_SHORT).show()
 
         bluetoothAdapter.startDiscovery()
     }
