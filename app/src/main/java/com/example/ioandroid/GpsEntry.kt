@@ -12,4 +12,7 @@ data class GpsEntry(
     fun toCSV(): String {
         return "$label;$cellStrength;$cellType;$timeStampNetwork;$hAccuracyNetwork;$vAccuracyNetwork;$bAccuracyNetwork;$speedAccuracyNetwork;$networkLocationType;$timeStampGPS;$hAccuracyGPS;$vAccuracyGPS;$bAccuracyGPS;$speedAccuracyGPS;$nrSatellitesInView; $nrSatellitesInFix;$minCn0GPS;$meanCn0GPS;$maxCn0GPS;$satellites;$nrBlDevices;$minCn0Bl;$meanCn0Bl;$maxCn0Bl;$bluetoothDevices;$nrWifiDevices;$minCn0Wifi;$meanCn0Wifi;$maxCn0Wifi;$wifiDevices"
     }
+    fun toCSVHeader(): String {
+        return "label;cellStrength;cellType;timeStampNetwork;hAccuracyNetwork;vAccuracyNetwork;bAccuracyNetwork;speedAccuracyNetwork;networkLocationType;timeStampGPS;hAccuracyGPS;vAccuracyGPS;bAccuracyGPS;speedAccuracyGPS;nrSatellitesInView; nrSatellitesInFix;minCn0GPS;meanCn0GPS;maxCn0GPS;satellites;nrBlDevices;minCn0Bl;meanCn0Bl;maxCn0Bl;bluetoothDevices;nrWifiDevices;minCn0Wifi;meanCn0Wifi;maxCn0Wifi;wifiDevices"
+    }
 }

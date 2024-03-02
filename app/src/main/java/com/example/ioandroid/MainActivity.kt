@@ -294,6 +294,15 @@ class MainActivity : AppCompatActivity() {
 
         val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
 
+        //first write the header
+        val header = entries[0].toCSVHeader()
+        resolver.openOutputStream(uri!!).use { outputStream ->
+            OutputStreamWriter(outputStream).use { writer ->
+                writer.write(header)
+                writer.write("\n") // New line for each entry
+            }
+        }
+
         resolver.openOutputStream(uri!!).use { outputStream ->
             OutputStreamWriter(outputStream).use { writer ->
                 entries.forEach { entry ->
