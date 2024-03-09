@@ -287,7 +287,8 @@ class MainActivity : AppCompatActivity() {
     private fun exportData(entries: List<GpsEntry>) {
         val resolver = contentResolver
         val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, "gps_data.csv")
+            // the file name should be the label (indor/outdoor) and the current timestamp
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "${getSelectedLocation()}_${formatTimestamp(System.currentTimeMillis())}.csv")
             put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
             put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS)
         }
@@ -313,21 +314,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createFile() {
-        val resolver = contentResolver
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, "gps_data.csv")
-            put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS)
-        }
-
-        val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
-
-        resolver.openOutputStream(uri!!).use { outputStream ->
-            // Write your data here
-        }
-    }
-
     private fun copyToClipboard(text: String) {
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("label", text)
@@ -346,5 +332,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return map
+    }
+
+    fun formatTimestamp(timestamp: Long): String {
+        //day and time
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        return dateFormat.format(timestamp)
     }
 }
