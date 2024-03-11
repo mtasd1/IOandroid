@@ -284,10 +284,16 @@ class MainActivity : AppCompatActivity() {
         return savedEntries
     }
 
+    private fun clearSharedPreferences() {
+        val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.clear()
+        editor.apply()
+    }
+
     private fun exportData(entries: List<GpsEntry>) {
         val resolver = contentResolver
         val contentValues = ContentValues().apply {
-            // the file name should be the label (indor/outdoor) and the current timestamp
             put(MediaStore.MediaColumns.DISPLAY_NAME, "${getSelectedLocation()}_${formatTimestamp(System.currentTimeMillis())}.csv")
             put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
             put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS)
@@ -295,17 +301,13 @@ class MainActivity : AppCompatActivity() {
 
         val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
 
-        //first write the header
-        val header = entries[0].toCSVHeader()
-        resolver.openOutputStream(uri!!).use { outputStream ->
-            OutputStreamWriter(outputStream).use { writer ->
-                writer.write(header)
-                writer.write("\n") // New line for each entry
-            }
-        }
 
         resolver.openOutputStream(uri!!).use { outputStream ->
             OutputStreamWriter(outputStream).use { writer ->
+                val header = entries[0].toCSVHeader()
+                writer.write(header)
+                writer.write("\n") // New line for each entry
+
                 entries.forEach { entry ->
                     writer.write(entry.toCSV())
                     writer.write("\n") // New line for each entry
