@@ -102,7 +102,6 @@ class BluetoothService(private val context: Context) {
             )
             return
         }
-        Toast.makeText(context, "Stopping discovery with ${bluetoothDevices.size} devices found", Toast.LENGTH_SHORT).show()
         bluetoothAdapter?.cancelDiscovery()
         context.unregisterReceiver(receiver)
     }

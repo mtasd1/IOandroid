@@ -45,15 +45,13 @@ class LocationManagerService(private var activity: Activity): LocationService {
             nrSatellitesInFix = 0
             nrSatellitesInView = status.satelliteCount
             for (i in 0 until nrSatellitesInView) {
-                //check if satellite is from gps, glonass, galileo or beidou
-                val isGPS = status.getConstellationType(i) == GnssStatus.CONSTELLATION_GPS
                 if(status.usedInFix(i)) {
                     satellites.add(Triple(getConstellationTypeString(status.getConstellationType(i)), status.getSvid(i), status.getCn0DbHz(i)))
                     nrSatellitesInFix++
                 }
             }
             //sort the satellites by their signal strength
-            satellites.sortByDescending { it.second }
+            satellites.sortByDescending { it.third }
             satellitesText = satellites.toString()
         }
     }
@@ -130,8 +128,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
     private fun startLocationUpdates(provider: String, locationListener: LocationListener) {
         unregisterGNSSStatusCallback()
         checkPermissions()
-        //locationManager.requestLocationUpdates(provider, 2000, 0f, locationListener)
-        locationManager.requestSingleUpdate(provider, locationListener, null)
+        locationManager.requestLocationUpdates(provider, 2000, 0f, locationListener)
     }
 
     private fun unregisterGNSSStatusCallback() {
