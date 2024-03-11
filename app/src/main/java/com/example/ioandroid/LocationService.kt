@@ -1,7 +1,7 @@
 package com.example.ioandroid
 
 import android.location.Location
-import org.json.JSONObject
+import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -16,7 +16,7 @@ interface LocationService {
 
     fun getSatelliteInfo(): List<Triple<String, Int, Float>>
 
-    fun getSatelliteInfoJSON(): JSONObject
+    fun getSatelliteInfoJSON(): JSONArray
 
     fun getFormattedLocation(location: Location) {
         //TODO: implement this method

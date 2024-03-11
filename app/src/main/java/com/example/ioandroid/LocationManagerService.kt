@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.Spinner
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import org.json.JSONArray
 import org.json.JSONObject
 
 class LocationManagerService(private var activity: Activity): LocationService {
@@ -79,14 +80,14 @@ class LocationManagerService(private var activity: Activity): LocationService {
         return satellites
     }
 
-    override fun getSatelliteInfoJSON(): JSONObject {
-        val satellitesJSON = JSONObject()
+    override fun getSatelliteInfoJSON(): JSONArray {
+        val satellitesJSON = JSONArray()
         for (i in 0 until satellites.size) {
             val satellite = JSONObject()
             satellite.put("constellation", satellites[i].first)
             satellite.put("svid", satellites[i].second)
             satellite.put("cn0", satellites[i].third)
-            satellitesJSON.put("satellite$i", satellite)
+            satellitesJSON.put(satellite)
         }
         return satellitesJSON
     }

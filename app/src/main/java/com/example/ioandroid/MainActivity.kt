@@ -243,17 +243,17 @@ class MainActivity : AppCompatActivity() {
             minCn0GPS,
             meanCn0GPS,
             maxCn0GPS,
-            satellites,
+            satellites.toString(),
             nrBlDevices,
             minCn0Bl,
             meanCn0Bl,
             maxCn0Bl,
-            blDevices,
+            blDevices.toString(),
             nrWifiDevices,
             minCn0Wifi,
             meanCn0Wifi,
             maxCn0Wifi,
-            wifiNetworks
+            wifiNetworks.toString()
         )
         gpsEntries.add(gpsEntry)
         adapter.notifyDataSetChanged()

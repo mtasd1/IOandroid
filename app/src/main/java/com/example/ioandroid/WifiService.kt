@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import androidx.core.app.ActivityCompat
+import org.json.JSONArray
 import org.json.JSONObject
 
 class WifiService(private val context: Context) {
@@ -39,14 +40,14 @@ class WifiService(private val context: Context) {
         return wifiManager.scanResults
     }
 
-    fun getWifiNetworksJSON(): JSONObject {
-        val wifiNetworksJSON = JSONObject()
+    fun getWifiNetworksJSON(): JSONArray {
+        val wifiNetworksJSON = JSONArray()
         val wifiNetworks = getWifiNetworks()
         for (i in 0 until wifiNetworks.size) {
             val wifiNetwork = JSONObject()
             wifiNetwork.put("SSID", wifiNetworks[i].SSID)
             wifiNetwork.put("level", wifiNetworks[i].level)
-            wifiNetworksJSON.put("wifiNetwork$i", wifiNetwork)
+            wifiNetworksJSON.put(wifiNetwork)
         }
         return wifiNetworksJSON
     }
@@ -67,10 +68,10 @@ class WifiService(private val context: Context) {
         }
     }
 
-    fun getMinCn0(JSON: JSONObject): Int {
+    fun getMinCn0(JSON: JSONArray): Int {
         var minCn0 = 0
         for (i in 0 until JSON.length()) {
-            val wifiNetwork = JSON.getJSONObject("wifiNetwork$i")
+            val wifiNetwork = JSON.getJSONObject(i)
             if (wifiNetwork.getInt("level") < minCn0) {
                 minCn0 = wifiNetwork.getInt("level")
             }
@@ -78,20 +79,20 @@ class WifiService(private val context: Context) {
         return minCn0
     }
 
-    fun getMeanCn0(JSON: JSONObject): Float {
+    fun getMeanCn0(JSON: JSONArray): Float {
         var meanCn0 = 0.0f
         for (i in 0 until JSON.length()) {
-            val wifiNetwork = JSON.getJSONObject("wifiNetwork$i")
+            val wifiNetwork = JSON.getJSONObject(i)
             meanCn0 += wifiNetwork.getInt("level")
         }
         meanCn0 /= JSON.length()
         return meanCn0
     }
 
-    fun getMaxCn0(JSON: JSONObject): Int {
+    fun getMaxCn0(JSON: JSONArray): Int {
         var maxCn0 = -100
         for (i in 0 until JSON.length()) {
-            val wifiNetwork = JSON.getJSONObject("wifiNetwork$i")
+            val wifiNetwork = JSON.getJSONObject(i)
             if (wifiNetwork.getInt("level") > maxCn0) {
                 maxCn0 = wifiNetwork.getInt("level")
             }

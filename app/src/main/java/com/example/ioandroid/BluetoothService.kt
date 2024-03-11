@@ -14,6 +14,7 @@ import android.util.ArrayMap
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
+import org.json.JSONArray
 import org.json.JSONObject
 
 class BluetoothService(private val context: Context) {
@@ -188,8 +189,8 @@ class BluetoothService(private val context: Context) {
         return maxCn0
     }
 
-    fun getDevicesJSON(): JSONObject {
-        val json = JSONObject()
+    fun getDevicesJSON(): JSONArray {
+        val json = JSONArray()
         for (entry in bluetoothDevices) {
             val device = entry.key
             val deviceInfo = entry.value
@@ -209,7 +210,7 @@ class BluetoothService(private val context: Context) {
             deviceJSON.put("rssi", deviceInfo.first ?: "Unknown")
             deviceJSON.put("class", deviceInfo.second.first ?: "Unknown")
             deviceJSON.put("type", deviceInfo.second.second ?: "Unknown")
-            json.put(device.address, deviceJSON)
+            json.put(deviceJSON)
         }
         return json
     }
