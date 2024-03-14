@@ -4,7 +4,6 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -19,7 +18,7 @@ import org.json.JSONObject
 
 class BluetoothService(private val context: Context) {
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-    private val bluetoothDevices = ArrayMap<BluetoothDevice, Triple<Int, Pair<Int, String>, String>>()
+    private val bluetoothDevices = ArrayMap<BluetoothDevice, Triple<Int, String, String>>()
     private var meanCn0 = 0.0f
 
     private val receiver = object : BroadcastReceiver() {
@@ -44,15 +43,14 @@ class BluetoothService(private val context: Context) {
                     }
                     val deviceClassInt = device?.bluetoothClass?.deviceClass ?: -1
                     val deviceClassString = getDeviceType(deviceClassInt)
-                    val deviceName = getDeviceName(device)
+                    val deviceClassMajorString = getMajorDeviceType(deviceClassInt)
 
                     if (!bluetoothDevices.containsKey(device)) {
-                        bluetoothDevices[device] = Triple(deviceRSSI.toInt(), Pair(deviceClassInt, deviceClassString), deviceName)
+                        bluetoothDevices[device] = Triple(deviceRSSI.toInt(), deviceClassMajorString, deviceClassString)
                     }
                 }
 
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    // Toast.makeText(context, "Discovery finished", Toast.LENGTH_SHORT).show()
                     stopDiscovery()
                 }
             }
@@ -85,7 +83,6 @@ class BluetoothService(private val context: Context) {
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
         context.registerReceiver(receiver, filter)
-        //Toast.makeText(context, "Starting discovery", Toast.LENGTH_SHORT).show()
 
         bluetoothAdapter.startDiscovery()
     }
@@ -137,12 +134,37 @@ class BluetoothService(private val context: Context) {
             BluetoothClass.Device.HEALTH_THERMOMETER -> "Health Thermometer"
             BluetoothClass.Device.HEALTH_UNCATEGORIZED -> "Health Uncategorised"
             BluetoothClass.Device.HEALTH_WEIGHING -> "Health Weighing"
+            BluetoothClass.Device.PHONE_CELLULAR -> "Phone Cellular"
+            BluetoothClass.Device.PHONE_CORDLESS -> "Phone Cordless"
+            BluetoothClass.Device.PHONE_ISDN -> "Phone ISDN"
+            BluetoothClass.Device.PHONE_MODEM_OR_GATEWAY -> "Phone Modem or Gateway"
+            BluetoothClass.Device.PHONE_SMART -> "Phone Smart"
+            BluetoothClass.Device.PHONE_UNCATEGORIZED -> "Phone Uncategorised"
+            BluetoothClass.Device.WEARABLE_GLASSES -> "Wearable Glasses"
+            BluetoothClass.Device.WEARABLE_HELMET -> "Wearable Helmet"
+            BluetoothClass.Device.WEARABLE_JACKET -> "Wearable Jacket"
+            BluetoothClass.Device.WEARABLE_PAGER -> "Wearable Pager"
+            BluetoothClass.Device.WEARABLE_UNCATEGORIZED -> "Wearable Uncategorised"
+            BluetoothClass.Device.WEARABLE_WRIST_WATCH -> "Wearable Wrist Watch"
             else -> "Unknown Device Class"
         }
     }
 
-    fun getDeviceName(device: BluetoothDevice?): String {
-        return device?.name ?: ""
+    fun getMajorDeviceType(deviceClassInt: Int?): String {
+        return when (deviceClassInt) {
+            BluetoothClass.Device.Major.AUDIO_VIDEO -> "Audio Video"
+            BluetoothClass.Device.Major.COMPUTER -> "Computer"
+            BluetoothClass.Device.Major.HEALTH -> "Health"
+            BluetoothClass.Device.Major.IMAGING -> "Imaging"
+            BluetoothClass.Device.Major.MISC -> "Miscellaneous"
+            BluetoothClass.Device.Major.NETWORKING -> "Networking"
+            BluetoothClass.Device.Major.PERIPHERAL -> "Peripheral"
+            BluetoothClass.Device.Major.PHONE -> "Phone"
+            BluetoothClass.Device.Major.TOY -> "Toy"
+            BluetoothClass.Device.Major.WEARABLE -> "Wearable"
+            BluetoothClass.Device.Major.UNCATEGORIZED -> "Uncategorised"
+            else -> "Unknown Major Device Class"
+        }
     }
 
     fun getMinCn0(): Int {
@@ -206,15 +228,14 @@ class BluetoothService(private val context: Context) {
                     1
                 )
             }
-            deviceJSON.put("name", device.name ?: "Unknown")
             deviceJSON.put("rssi", deviceInfo.first ?: "Unknown")
-            deviceJSON.put("class", deviceInfo.second.first ?: "Unknown")
-            deviceJSON.put("type", deviceInfo.second.second ?: "Unknown")
+            deviceJSON.put("majorClass", deviceInfo.second ?: "Unknown")
+            deviceJSON.put("class", deviceInfo.third ?: "Unknown")
             json.put(deviceJSON)
         }
         return json
     }
-    fun getDevicesList(): ArrayMap<BluetoothDevice, Triple<Int, Pair<Int, String>, String>> {
+    fun getDevicesList(): ArrayMap<BluetoothDevice, Triple<Int, String, String>> {
         return bluetoothDevices
     }
 
