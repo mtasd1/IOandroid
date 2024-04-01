@@ -6,6 +6,35 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/textViewCollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Collect"
+        app:layout_constraintEnd_toStartOf="@+id/switchPredict"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/switchPredict"
+        app:layout_constraintBottom_toBottomOf="@+id/switchPredict" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchPredict"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        app:layout_constraintEnd_toStartOf="@+id/textViewPredict"
+        app:layout_constraintStart_toEndOf="@+id/textViewCollect"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewPredict"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Predict"
+        app:layout_constraintStart_toEndOf="@+id/switchPredict"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/switchPredict"
+        app:layout_constraintBottom_toBottomOf="@+id/switchPredict" />
+
     <Spinner
         android:id="@+id/spinnerLocation"
         android:layout_width="0dp"
