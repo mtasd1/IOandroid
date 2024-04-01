@@ -67,36 +67,4 @@ class WifiService(private val context: Context) {
             wifiManager.isWifiEnabled = false
         }
     }
-
-    fun getMinCn0(JSON: JSONArray): Int {
-        var minCn0 = 0
-        for (i in 0 until JSON.length()) {
-            val wifiNetwork = JSON.getJSONObject(i)
-            if (wifiNetwork.getInt("level") < minCn0) {
-                minCn0 = wifiNetwork.getInt("level")
-            }
-        }
-        return minCn0
-    }
-
-    fun getMeanCn0(JSON: JSONArray): Float {
-        var meanCn0 = 0.0f
-        for (i in 0 until JSON.length()) {
-            val wifiNetwork = JSON.getJSONObject(i)
-            meanCn0 += wifiNetwork.getInt("level")
-        }
-        meanCn0 /= JSON.length()
-        return meanCn0
-    }
-
-    fun getMaxCn0(JSON: JSONArray): Int {
-        var maxCn0 = -100
-        for (i in 0 until JSON.length()) {
-            val wifiNetwork = JSON.getJSONObject(i)
-            if (wifiNetwork.getInt("level") > maxCn0) {
-                maxCn0 = wifiNetwork.getInt("level")
-            }
-        }
-        return maxCn0
-    }
 }

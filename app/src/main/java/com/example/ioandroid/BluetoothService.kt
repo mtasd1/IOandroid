@@ -167,50 +167,6 @@ class BluetoothService(private val context: Context) {
         }
     }
 
-    fun getMinCn0(): Int {
-        var minCn0 = 0
-
-        if(bluetoothDevices.isEmpty()) {
-            return 0
-        }
-
-        bluetoothDevices.forEach {
-            if((it.value?.first ?: 0) < minCn0) {
-                minCn0 = it.value.first
-            }
-        }
-        return minCn0
-    }
-
-    fun getMeanCn0(): Float {
-        meanCn0 = 0.0f
-
-        if(bluetoothDevices.isEmpty()) {
-            return meanCn0
-        }
-
-        bluetoothDevices.forEach {
-            meanCn0 += it.value.first
-        }
-        meanCn0 /= bluetoothDevices.size
-        return meanCn0
-    }
-
-    fun getMaxCn0(): Float {
-        var maxCn0 = -100.0f //minimum value for RSSI
-
-        if(bluetoothDevices.isEmpty()) {
-            return maxCn0
-        }
-
-        bluetoothDevices.forEach {
-            if(it.value.first > maxCn0) {
-                maxCn0 = it.value.first.toFloat()
-            }
-        }
-        return maxCn0
-    }
-
     fun getDevicesJSON(): JSONArray {
         val json = JSONArray()
         for (entry in bluetoothDevices) {
@@ -234,13 +190,6 @@ class BluetoothService(private val context: Context) {
             json.put(deviceJSON)
         }
         return json
-    }
-    fun getDevicesList(): ArrayMap<BluetoothDevice, Triple<Int, String, String>> {
-        return bluetoothDevices
-    }
-
-    fun getNrDevices(): Int {
-        return bluetoothDevices.size
     }
 
 }

@@ -4,4 +4,19 @@
         <item>Indoor</item>
         <item>Outdoor</item>
     </string-array>
+
+    <string-array name="description_options">
+        <item>Nähe Fenster</item>
+        <item>Raummitte</item>
+        <item>Kein Fenster</item>
+        <item>Überdacht</item>
+        <item>Häuserschlucht</item>
+        <item>Frei</item>
+    </string-array>
+
+    <string-array name="people_options">
+        <item>keine</item>
+        <item>weniger als 5</item>
+        <item>viel</item>
+    </string-array>
 </resources>

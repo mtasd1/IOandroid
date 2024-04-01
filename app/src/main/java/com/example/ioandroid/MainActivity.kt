@@ -22,6 +22,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
@@ -29,7 +30,6 @@ import java.text.SimpleDateFormat
 class MainActivity : AppCompatActivity() {
 
     private val gpsEntries = mutableListOf<GpsEntry>()
-    //private lateinit var adapter: ArrayAdapter<GpsEntry>
     private lateinit var adapter: ExpandableListAdapter;
 
     private lateinit var locationService: LocationService
@@ -57,6 +57,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val spinnerLocation: Spinner = findViewById(R.id.spinnerLocation)
+        val spinnerDescription: Spinner = findViewById(R.id.spinnerDescription)
+        val spinnerPeople: Spinner = findViewById(R.id.spinnerPeople)
         val btnTrack: Button = findViewById(R.id.btnTrack)
         val btnStopTrack: Button = findViewById(R.id.btnStopTrack)
         val listView: ExpandableListView = findViewById(R.id.expandableListView)
@@ -83,7 +85,7 @@ class MainActivity : AppCompatActivity() {
         btnDelete.isEnabled = false
 
 
-        // Adapter for the Spinner
+        // Adapter for the Location Spinner
         val labelAdapter = ArrayAdapter.createFromResource(
             this,
             R.array.location_options,
@@ -91,6 +93,25 @@ class MainActivity : AppCompatActivity() {
         )
         labelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerLocation.adapter = labelAdapter
+
+        // Adapter for the Description Spinner
+        val descriptionAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.description_options,
+            android.R.layout.simple_spinner_item
+        )
+        descriptionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerDescription.adapter = descriptionAdapter
+
+        // Adapter for the People Spinner
+        val peopleAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.people_options,
+            android.R.layout.simple_spinner_item
+        )
+        peopleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPeople.adapter = peopleAdapter
+
 
         // Adapter for the ListView
         adapter = ExpandableListAdapter(this, gpsEntries)
@@ -125,7 +146,6 @@ class MainActivity : AppCompatActivity() {
 
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
-            // Label, cellStrength, cellType, timeStampNetwork, hAccuracyNetwork, vAccuracyNetwork, networkLocationType, timeStampGPS, hAccuracyGPS, vAccuracyGPS, nrSatellites, top7 Satellites, bluetoothDevices, wifiNetworks, nrWifiNetworks
             handler.post(runnable) // start the tracking
             isTracking = true
             btnStopTrack.isEnabled = true
@@ -174,85 +194,47 @@ class MainActivity : AppCompatActivity() {
 
     private fun trackLocation() {
         val gpsData = locationService.getLocation()
-        if (gpsData.first == null && gpsData.second == null) {
-            Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show()
-            return
-        }
+
         val selectedLocation = getSelectedLocation()
+        val selectedDescription = getSelectedDescription()
+        val selectedPeople = getSelectedPeople()
         val dateFormat = SimpleDateFormat("HH:mm:ss")
 
         val cellStrength = telephoneService.getSignalStrength()
-        val cellType = telephoneService.getNetworkType(this)
 
         val timeStampNetwork = gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A"
-        val hAccuracyNetwork = gpsData.first?.accuracy ?: 0.0f
-        val vAccuracyNetwork = gpsData.first?.verticalAccuracyMeters ?: 0.0f
-        val bAccuracyNetwork = gpsData.first?.bearingAccuracyDegrees ?: 0.0f //probably not needed for our model
-        val speedAccuracyNetwork = gpsData.first?.speedAccuracyMetersPerSecond ?: 0.0f //probably not needed for our model
-        val networkExtras = bundleToMap(gpsData.first?.extras ?: Bundle())
-        val networkLocationType = networkExtras["networkLocationType"] ?: "N/A"
+        val latitudeNetwork = gpsData.first?.latitude ?: 0.0
+        val longitudeNetwork = gpsData.first?.longitude ?: 0.0
 
         val timeStampGPS = gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A"
-        val hAccuracyGPS = gpsData.second?.accuracy ?: 0.0f
-        val vAccuracyGPS = gpsData.second?.verticalAccuracyMeters ?: 0.0f
-        val bAccuracyGPS = gpsData.second?.bearingAccuracyDegrees ?: 0.0f //probably not needed for our model
-        val speedAccuracyGPS = gpsData.second?.speedAccuracyMetersPerSecond ?: 0.0f //probably not needed for our model
+        val latitudeGPS = gpsData.second?.latitude ?: 0.0
+        val longitudeGPS = gpsData.second?.longitude ?: 0.0
 
         val gpsExtras = bundleToMap(gpsData.second?.extras ?: Bundle())
         val satellites = locationService.getSatelliteInfoJSON()
         val nrSatellitesInFix = gpsExtras["satellites"] ?: satellites.length()
         val nrSatellitesInView = (locationService as LocationManagerService).getSatellitesInView()
-        val minCn0GPS = (locationService as LocationManagerService).getMinCn0()
-        val meanCn0GPS = gpsExtras["meanCn0"] ?: 0.0f
-        val maxCn0GPS = gpsExtras["maxCn0"] ?: 0.0f
-        // if needed we will also calculate the mean and max Cn0 of the top 7 satellites
-
 
         bluetoothService.startDiscovery()
         val blDevices = bluetoothService.getDevicesJSON()
 
-        var nrBlDevices = bluetoothService.getNrDevices()
-        var minCn0Bl = bluetoothService.getMinCn0()
-        var meanCn0Bl = bluetoothService.getMeanCn0()
-        var maxCn0Bl = bluetoothService.getMaxCn0()
-
         val wifiNetworks = wifiService.getWifiNetworksJSON()
-        var nrWifiDevices = wifiNetworks.length()
-        var minCn0Wifi = wifiService.getMinCn0(wifiNetworks)
-        var meanCn0Wifi = wifiService.getMeanCn0(wifiNetworks)
-        var maxCn0Wifi = wifiService.getMaxCn0(wifiNetworks)
-
 
         val gpsEntry = GpsEntry(
             selectedLocation,
+            selectedDescription,
+            selectedPeople,
             cellStrength,
-            cellType,
             timeStampNetwork,
-            hAccuracyNetwork,
-            vAccuracyNetwork,
-            bAccuracyNetwork,
-            speedAccuracyNetwork,
-            networkLocationType,
+            latitudeNetwork,
+            longitudeNetwork,
             timeStampGPS,
-            hAccuracyGPS,
-            vAccuracyGPS,
-            bAccuracyGPS,
-            speedAccuracyGPS,
+            latitudeGPS,
+            longitudeGPS,
             nrSatellitesInView,
             nrSatellitesInFix,
-            minCn0GPS,
-            meanCn0GPS,
-            maxCn0GPS,
             satellites.toString(),
-            nrBlDevices,
-            minCn0Bl,
-            meanCn0Bl,
-            maxCn0Bl,
             blDevices.toString(),
-            nrWifiDevices,
-            minCn0Wifi,
-            meanCn0Wifi,
-            maxCn0Wifi,
             wifiNetworks.toString()
         )
         gpsEntries.add(gpsEntry)
@@ -264,10 +246,18 @@ class MainActivity : AppCompatActivity() {
         return findViewById<Spinner>(R.id.spinnerLocation).selectedItem.toString()
     }
 
+    fun getSelectedDescription(): String {
+        return findViewById<Spinner>(R.id.spinnerDescription).selectedItem.toString()
+    }
+
+    fun getSelectedPeople(): String {
+        return findViewById<Spinner>(R.id.spinnerPeople).selectedItem.toString()
+    }
+
     private fun saveEntriesToSharedPreferences() {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val editor: SharedPreferences.Editor = prefs.edit()
-        val gson = Gson()
+        val gson = GsonBuilder().serializeSpecialFloatingPointValues().create()
         val json = gson.toJson(gpsEntries)
         editor.putString("entries", json)
         editor.apply()
