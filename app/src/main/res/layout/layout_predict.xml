@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/textViewCollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Collect"
+        app:layout_constraintEnd_toStartOf="@+id/switchPredict"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/switchPredict"
+        app:layout_constraintBottom_toBottomOf="@+id/switchPredict" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchPredict"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        app:layout_constraintEnd_toStartOf="@+id/textViewPredict"
+        app:layout_constraintStart_toEndOf="@+id/textViewCollect"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewPredict"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Predict"
+        app:layout_constraintStart_toEndOf="@+id/switchPredict"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/switchPredict"
+        app:layout_constraintBottom_toBottomOf="@+id/switchPredict" />
+
+    <Button
+        android:id="@+id/btnTrack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Predict"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchPredict" />
+
+    <TextView
+        android:id="@+id/textViewPredictionHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Prediction: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnTrack" />
+
+    <TextView
+        android:id="@+id/textViewPrediction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Prediction will appear here"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPredictionHeader" />
+
+    <TextView
+        android:id="@+id/locationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Location: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPrediction" />
+
+    <Spinner
+        android:id="@+id/spinnerLocation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:entries="@array/location_options"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.064"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_default="wrap" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

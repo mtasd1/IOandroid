@@ -3,6 +3,7 @@ package com.example.ioandroid
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentValues
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -21,6 +22,7 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -30,7 +32,7 @@ import java.text.SimpleDateFormat
 class MainActivity : AppCompatActivity() {
 
     private val gpsEntries = mutableListOf<GpsEntry>()
-    private lateinit var adapter: ExpandableListAdapter;
+    private lateinit var adapter: ExpandableListAdapter
 
     private lateinit var locationService: LocationService
     private lateinit var telephoneService: TelephoneService
@@ -46,15 +48,18 @@ class MainActivity : AppCompatActivity() {
             handler.postDelayed(this, delay)
         }
     }
-    private var isTracking = false
 
     private val PREFS_NAME = "MyPrefsFile"
+
+    private lateinit var switchPredict: SwitchCompat
 
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        switchPredict = findViewById(R.id.switchPredict)
 
         val spinnerLocation: Spinner = findViewById(R.id.spinnerLocation)
         val spinnerDescription: Spinner = findViewById(R.id.spinnerDescription)
@@ -66,6 +71,16 @@ class MainActivity : AppCompatActivity() {
         val btnDeleteAll: Button = findViewById(R.id.btnDeleteAll)
         val btnExport: Button = findViewById(R.id.btnExport)
         var selectedGroupPosition = AdapterView.INVALID_POSITION
+
+        switchPredict.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // Start the PredictActivity
+                val intent = Intent(this, PredictActivity::class.java)
+                startActivity(intent)
+            } else {
+                // Stop the PredictActivity
+            }
+        }
 
 
 
@@ -147,13 +162,11 @@ class MainActivity : AppCompatActivity() {
         // Set a listener for the Track button
         btnTrack.setOnClickListener {
             handler.post(runnable) // start the tracking
-            isTracking = true
             btnStopTrack.isEnabled = true
         }
 
         btnStopTrack.setOnClickListener {
             handler.removeCallbacks(runnable) // stop the tracking
-            isTracking = false
             btnStopTrack.isEnabled = false
         }
 
@@ -192,7 +205,7 @@ class MainActivity : AppCompatActivity() {
         bluetoothService.stopDiscovery()
     }
 
-    private fun trackLocation() {
+    fun trackLocation() {
         val gpsData = locationService.getLocation()
 
         val selectedLocation = getSelectedLocation()
