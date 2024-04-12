@@ -11,7 +11,6 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
-import android.util.ArrayMap
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -34,11 +33,7 @@ class MainActivity : AppCompatActivity() {
     private val gpsEntries = mutableListOf<GpsEntry>()
     private lateinit var adapter: ExpandableListAdapter
 
-    private lateinit var locationService: LocationService
-    private lateinit var telephoneService: TelephoneService
-    private lateinit var wifiService: WifiService
-    private lateinit var bluetoothService: BluetoothService
-
+    private lateinit var trackService: TrackService
 
     private val handler = Handler(Looper.getMainLooper())
     private val delay = 2000L
@@ -82,18 +77,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
-
-        locationService = LocationManagerService(this)
-        locationService.getLocation() // call the function when creating to initialize the Location
-
-        bluetoothService = BluetoothService(this)
-        bluetoothService.startDiscovery()
-
-        wifiService = WifiService(this)
-        wifiService.enableWifi()
-
-        telephoneService = TelephoneService(this)
+        trackService = TrackService(this)
+        trackService.startService()
 
         btnTrack.isEnabled = false
         btnStopTrack.isEnabled = false
@@ -201,55 +186,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        locationService.stopLocationUpdates()
-        bluetoothService.stopDiscovery()
+        trackService.stopService()
     }
 
     fun trackLocation() {
-        val gpsData = locationService.getLocation()
-
         val selectedLocation = getSelectedLocation()
         val selectedDescription = getSelectedDescription()
         val selectedPeople = getSelectedPeople()
-        val dateFormat = SimpleDateFormat("HH:mm:ss")
 
-        val cellStrength = telephoneService.getSignalStrength()
+        val gpsEntry = trackService.getGpsEntry(selectedLocation, selectedDescription, selectedPeople)
 
-        val timeStampNetwork = gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A"
-        val latitudeNetwork = gpsData.first?.latitude ?: 0.0
-        val longitudeNetwork = gpsData.first?.longitude ?: 0.0
-
-        val timeStampGPS = gpsData.second?.time?.let { dateFormat.format(it) } ?: "N/A"
-        val latitudeGPS = gpsData.second?.latitude ?: 0.0
-        val longitudeGPS = gpsData.second?.longitude ?: 0.0
-
-        val gpsExtras = bundleToMap(gpsData.second?.extras ?: Bundle())
-        val satellites = locationService.getSatelliteInfoJSON()
-        val nrSatellitesInFix = gpsExtras["satellites"] ?: satellites.length()
-        val nrSatellitesInView = (locationService as LocationManagerService).getSatellitesInView()
-
-        bluetoothService.startDiscovery()
-        val blDevices = bluetoothService.getDevicesJSON()
-
-        val wifiNetworks = wifiService.getWifiNetworksJSON()
-
-        val gpsEntry = GpsEntry(
-            selectedLocation,
-            selectedDescription,
-            selectedPeople,
-            cellStrength,
-            timeStampNetwork,
-            latitudeNetwork,
-            longitudeNetwork,
-            timeStampGPS,
-            latitudeGPS,
-            longitudeGPS,
-            nrSatellitesInView,
-            nrSatellitesInFix,
-            satellites.toString(),
-            blDevices.toString(),
-            wifiNetworks.toString()
-        )
         gpsEntries.add(gpsEntry)
         adapter.notifyDataSetChanged()
         saveEntriesToSharedPreferences()
@@ -324,19 +270,6 @@ class MainActivity : AppCompatActivity() {
         val clip = ClipData.newPlainText("label", text)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show()
-    }
-
-    fun bundleToMap(bundle: Bundle): ArrayMap<String, Any> {
-        val map = ArrayMap<String, Any>()
-        for (key in bundle.keySet()) {
-            val value = bundle.get(key)
-            if (value is Bundle) {
-                map[key] = bundleToMap(value)
-            } else {
-                map[key] = value!!
-            }
-        }
-        return map
     }
 
     fun formatTimestamp(timestamp: Long): String {
