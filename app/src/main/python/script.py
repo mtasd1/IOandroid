@@ -55,6 +55,11 @@ def preprocess_single_entry(file):
     # Drop list columns
     df.drop(columns=['satellites', 'bluetoothDevices', 'wifiDevices', 'satellite_cn0', 'bluetooth_rssi', 'wifi_rssi'], axis=1, inplace=True)
 
+    # Check all columns, if emtpy then fill missing columns with 0
+    for column in df.columns:
+        if df[column].isnull().all():
+            df[column] = 0
+
     return df
 
 def safe_delete(df, columns):
@@ -71,5 +76,8 @@ def predict_rfc(df):
     prediction = model.predict_proba(df)
     return prediction
 
-def double(x):
-    return x * 2
+# For LSTM we only need 1D array of the float values
+def preprocess_lstm(file):
+    preprocessed = preprocess_single_entry(file)
+    return preprocessed.values.flatten()
+

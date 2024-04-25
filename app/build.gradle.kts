@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.AndroidResources
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -22,6 +24,11 @@ android {
         }
     }
 
+    aaptOptions {
+        noCompress += "tflite"
+        noCompress += "lite"
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -42,6 +49,11 @@ android {
     productFlavors {
         create("py310") { dimension = "pyVersion" }
         create("py311") { dimension = "pyVersion" }
+    }
+
+    fun AndroidResources.() {
+        noCompress += "lite"
+        noCompress += "tflite"
     }
 }
 
@@ -74,4 +86,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation("org.tensorflow:tensorflow-lite:+")
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:+")
+
 }
