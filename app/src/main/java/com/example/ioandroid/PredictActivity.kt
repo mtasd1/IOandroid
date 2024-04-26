@@ -83,7 +83,7 @@ class PredictActivity : AppCompatActivity() {
         options.useNNAPI = false
 
         buttonPredict.setOnClickListener {
-            interpreter = Interpreter(loadModelFile(this, "lstm_classifier.tflite"), options)
+            interpreter = Interpreter(loadModelFile(this, "lstm_classifier.tflite"))
             inputSize = interpreter.getInputTensor(0).shape().size
             outputSize = interpreter.getOutputTensor(0).shape().size
             input = ByteBuffer.allocateDirect(4 * inputSize)
@@ -103,6 +103,8 @@ class PredictActivity : AppCompatActivity() {
                 val preprocessLSTM = preprocessLSTM(file)
                 println(preprocessLSTM.toString())
                 // Update the UI with the current location
+
+                //TODO investigate why the LSTM model is not precise and updates not often
 
                 val predictionRfc = predictWithRFC(preprocess)
                 val predictionLstm = predictWithLSTM(interpreter, preprocessLSTM)
@@ -179,11 +181,18 @@ class PredictActivity : AppCompatActivity() {
 
         // Ensure the ByteBuffer can hold all the data
         input = ByteBuffer.allocateDirect(4 * data1D.size)
+        input.order(ByteOrder.LITTLE_ENDIAN) // Set the byte order of input buffer to little-endian
 
         // Load data into input buffer
         input.rewind()
         for (value in data1D) {
             input.putFloat(value)
+        }
+
+        // print the content of the input buffer so that we can see if the data is loaded correctly
+        input.rewind()
+        for (i in 0 until data1D.size) {
+            println("content $i = ${input.float}")
         }
 
         // Run the interpreter
