@@ -16,7 +16,7 @@ import androidx.core.app.ActivityCompat
 import org.json.JSONArray
 import org.json.JSONObject
 
-class LocationManagerService(private var activity: Activity): LocationService {
+class LocationManagerService(private val activity: Activity, private val isPredict: Boolean): LocationService {
     private val locationManager = activity.getSystemService(Activity.LOCATION_SERVICE) as LocationManager
     private var currentLocationGPS: Location? = null
     private var currentLocationNetwork: Location? = null
@@ -25,7 +25,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
     private var nrSatellitesInView = 0
     private var satellitesText = ""
     private val trackButton: Button = activity.findViewById(R.id.btnTrack)
-    private val spinnerLocation: Spinner = activity.findViewById(R.id.spinnerLocation)
+    private val spinnerLocation: Spinner? = if (isPredict) null else activity.findViewById(R.id.spinnerLocation)
 
     private val locationListenerGPS: LocationListener =
         LocationListener { location ->
@@ -58,7 +58,7 @@ class LocationManagerService(private var activity: Activity): LocationService {
     }
 
     private fun enableTrackButton() {
-        if (!trackButton.isEnabled && (currentLocationGPS != null || currentLocationNetwork != null) && spinnerLocation.selectedItem != null) {
+        if (!trackButton.isEnabled && (currentLocationGPS != null || currentLocationNetwork != null) && spinnerLocation?.selectedItem != null) {
             trackButton.isEnabled = true
             trackButton.text = "Track"
         }
@@ -90,20 +90,6 @@ class LocationManagerService(private var activity: Activity): LocationService {
             satellitesJSON.put(satellite)
         }
         return satellitesJSON
-    }
-
-    fun getMinCn0(): Float {
-        if(satellites.isEmpty()
-        ) {
-            return 0.0f
-        }
-        var minCn0 = 100.0f
-        for (i in 0 until satellites.size) {
-            if (satellites[i].third < minCn0) {
-                minCn0 = satellites[i].third
-            }
-        }
-        return minCn0
     }
 
     fun getSatellitesInView(): Int {

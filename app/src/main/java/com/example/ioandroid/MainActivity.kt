@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        trackService = TrackService(this)
+        trackService = TrackService(this, false)
         trackService.startService()
 
         btnTrack.isEnabled = false

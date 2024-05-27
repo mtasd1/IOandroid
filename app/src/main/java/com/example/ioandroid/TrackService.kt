@@ -5,14 +5,14 @@ import android.util.ArrayMap
 import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 
-class TrackService(private val appCompatActivity: AppCompatActivity) {
+class TrackService(private val appCompatActivity: AppCompatActivity, private val isPredict: Boolean) {
     private lateinit var locationService: LocationService
     private lateinit var telephoneService: TelephoneService
     private lateinit var wifiService: WifiService
     private lateinit var bluetoothService: BluetoothService
 
     fun startService() {
-        locationService = LocationManagerService(appCompatActivity)
+        locationService = LocationManagerService(appCompatActivity, isPredict)
         locationService.getLocation()
 
         bluetoothService = BluetoothService(appCompatActivity)

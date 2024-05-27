@@ -88,5 +88,6 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("org.tensorflow:tensorflow-lite:+")
     implementation("org.tensorflow:tensorflow-lite-select-tf-ops:+")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 }

@@ -44,43 +44,46 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/switchPredict" />
 
+    <!-- TextView for Random Forest Classifier -->
     <TextView
-        android:id="@+id/textViewPredictionHeader"
+        android:id="@+id/textViewRFC"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Prediction: "
+        android:text="Random Forest Classifier: "
+        app:layout_constraintTop_toBottomOf="@+id/btnTrack"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnTrack" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Horizontal Bar Chart for RFC -->
+    <com.github.mikephil.charting.charts.HorizontalBarChart
+        android:id="@+id/barChartRFC"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        app:layout_constraintTop_toBottomOf="@+id/textViewRFC"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- TextView for LSTM -->
     <TextView
-        android:id="@+id/textViewPrediction"
+        android:id="@+id/textViewLSTM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Prediction will appear here"
+        android:text="LSTM: "
+        app:layout_constraintTop_toBottomOf="@+id/barChartRFC"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewPredictionHeader" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/locationTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Location: "
+    <!-- Horizontal Bar Chart for LSTM -->
+    <com.github.mikephil.charting.charts.HorizontalBarChart
+        android:id="@+id/barChartLSTM"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLSTM"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewPrediction" />
-
-    <Spinner
-        android:id="@+id/spinnerLocation"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:entries="@array/location_options"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.064"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_default="wrap" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

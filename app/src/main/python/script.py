@@ -74,7 +74,7 @@ def predict_rfc(df):
     model = joblib.load(path)
     # Predict
     prediction = model.predict_proba(df)
-    return prediction
+    return prediction.tolist()
 
 # For LSTM we only need 1D array of the float values
 def preprocess_lstm(file):
