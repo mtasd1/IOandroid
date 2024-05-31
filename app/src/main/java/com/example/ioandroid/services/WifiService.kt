@@ -53,19 +53,9 @@ class WifiService(private val context: Context) {
         return wifiNetworksJSON
     }
 
-    fun isWifiEnabled(): Boolean {
-        return wifiManager.isWifiEnabled
-    }
-
     fun enableWifi() {
         if (!wifiManager.isWifiEnabled) {
             wifiManager.isWifiEnabled = true
-        }
-    }
-
-    fun disableWifi() {
-        if (wifiManager.isWifiEnabled) {
-            wifiManager.isWifiEnabled = false
         }
     }
 }

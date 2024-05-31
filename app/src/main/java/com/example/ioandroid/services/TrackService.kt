@@ -1,7 +1,9 @@
 package com.example.ioandroid.services
 
+import android.os.Build
 import android.os.Bundle
 import android.util.ArrayMap
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.ioandroid.models.GpsEntry
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +18,7 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
+    @RequiresApi(Build.VERSION_CODES.S)
     fun startService(nWarmUp: Int) {
         locationService = LocationManagerService(appCompatActivity, isPredict)
         locationService.getLocation()
@@ -34,6 +37,7 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     fun getGpsEntry(
         selectedLocation: String,
         selectedDescription: String,

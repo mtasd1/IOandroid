@@ -20,7 +20,6 @@ import org.json.JSONObject
 class BluetoothService(private val context: Context) {
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private val bluetoothDevices = ArrayMap<BluetoothDevice, Triple<Int, String, String>>()
-    private var meanCn0 = 0.0f
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {

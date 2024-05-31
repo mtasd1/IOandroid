@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import com.example.ioandroid.UI.CollectActivity
 
+@RequiresApi(Build.VERSION_CODES.S)
 class TelephoneService(context: Context) {
     private val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     private var signalStrengthDbm = 0

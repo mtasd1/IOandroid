@@ -20,7 +20,6 @@ class PredictService(private val context: Context, private val activity: Activit
     private val py = Python.getInstance()
     private val module = py.getModule("script")
 
-    // Variables for the LSTM model
     private lateinit var interpreter: Interpreter
     private var inputSize = 0
     private var outputSize = 0
@@ -42,16 +41,8 @@ class PredictService(private val context: Context, private val activity: Activit
         input = ByteBuffer.allocateDirect(4 * inputSize)
         output = ByteBuffer.allocateDirect(4 * outputSize)
     }
-
-    fun getPrediction(model: String) {
-        // Get predictions
-    }
     fun stopService() {
-        // Stop the service
-    }
-
-    fun initLSTM() {
-        // Initialize LSTM
+        interpreter.close()
     }
 
     fun predictWithLSTM(file: File): FloatArray {

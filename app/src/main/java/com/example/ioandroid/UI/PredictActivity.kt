@@ -76,6 +76,7 @@ class PredictActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         trackService.stopService()
+        predictService.stopService()
     }
 
     private suspend fun trackLocation(): GpsEntry {
