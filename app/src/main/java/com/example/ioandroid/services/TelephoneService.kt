@@ -10,7 +10,7 @@ import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
-import com.example.ioandroid.UI.MainActivity
+import com.example.ioandroid.UI.CollectActivity
 
 class TelephoneService(context: Context) {
     private val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -50,7 +50,7 @@ class TelephoneService(context: Context) {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                context as MainActivity,
+                context as CollectActivity,
                 arrayOf(Manifest.permission.READ_PHONE_STATE),
                 1
             )

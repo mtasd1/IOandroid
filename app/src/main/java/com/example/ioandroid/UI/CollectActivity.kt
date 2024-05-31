@@ -32,7 +32,7 @@ import com.google.gson.reflect.TypeToken
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 
-class MainActivity : AppCompatActivity() {
+class CollectActivity : AppCompatActivity() {
 
     private val gpsEntries = mutableListOf<GpsEntry>()
     private lateinit var adapter: ExpandableListAdapter

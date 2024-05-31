@@ -41,15 +41,6 @@ class PredictActivity : AppCompatActivity() {
 
     private lateinit var trackService: TrackService
 
-    /*private val handler = Handler(Looper.getMainLooper())
-    private val delay = 2000L
-    private val runnable = object : Runnable {
-        override fun run() {
-            trackLocation()
-            handler.postDelayed(this, delay)
-        }
-    }*/
-
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
     private val py = Python.getInstance()
     private val module = py.getModule("script")
@@ -61,10 +52,9 @@ class PredictActivity : AppCompatActivity() {
     private lateinit var input : ByteBuffer
     private lateinit var output : ByteBuffer
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.layout_predict) // You need to create this layout file
+        setContentView(R.layout.layout_predict)
 
 
         switchPredict = findViewById(R.id.switchPredict)
@@ -79,17 +69,12 @@ class PredictActivity : AppCompatActivity() {
 
         switchPredict.setOnCheckedChangeListener { _, isChecked ->
             if (!isChecked) {
-                startActivity(Intent(this, MainActivity::class.java))
+                startActivity(Intent(this, CollectActivity::class.java))
             }
         }
 
         // Initialize the LSTM model
         val options = Interpreter.Options()
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            options.useNNAPI = true
-        } else {
-            options.useNNAPI = false
-        }*/
         options.useNNAPI = false
 
         interpreter = Interpreter(loadModelFile(this, "lstm_classifier.tflite"))
@@ -97,6 +82,16 @@ class PredictActivity : AppCompatActivity() {
         outputSize = interpreter.getOutputTensor(0).shape().size
         input = ByteBuffer.allocateDirect(4 * inputSize)
         output = ByteBuffer.allocateDirect(4 * outputSize)
+
+        trackService = TrackService(this, true)
+        trackService.startService()
+
+        // fetch the current location three times for warm-up immediately after the service is started
+        coroutineScope.launch {
+            repeat(3) {
+                currentLocation = trackLocation()
+            }
+        }
 
         buttonPredict.setOnClickListener {
 
@@ -124,16 +119,10 @@ class PredictActivity : AppCompatActivity() {
                 }
             }
         }
-
-        trackService = TrackService(this, true)
-        trackService.startService()
-
-        // fetch the current location three times for warm-up immediately after the service is started
-        coroutineScope.launch {
-            repeat(3) {
-                currentLocation = trackLocation()
-            }
-        }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        trackService.stopService()
     }
 
     private suspend fun trackLocation(): GpsEntry {

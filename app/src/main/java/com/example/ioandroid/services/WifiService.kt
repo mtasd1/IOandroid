@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import androidx.core.app.ActivityCompat
-import com.example.ioandroid.UI.MainActivity
+import com.example.ioandroid.UI.CollectActivity
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -20,7 +20,7 @@ class WifiService(private val context: Context) {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                context as MainActivity,
+                context as CollectActivity,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 1
             )
@@ -32,7 +32,7 @@ class WifiService(private val context: Context) {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                context as MainActivity,
+                context as CollectActivity,
                 arrayOf(Manifest.permission.ACCESS_WIFI_STATE),
                 1
             )

@@ -13,7 +13,7 @@ import android.util.ArrayMap
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
-import com.example.ioandroid.UI.MainActivity
+import com.example.ioandroid.UI.CollectActivity
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -37,7 +37,7 @@ class BluetoothService(private val context: Context) {
                         ) != PackageManager.PERMISSION_GRANTED
                     ) {
                         ActivityCompat.requestPermissions(
-                            context as MainActivity,
+                            context as CollectActivity,
                             arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION),
                             1
                         )
@@ -65,7 +65,7 @@ class BluetoothService(private val context: Context) {
         }
         if(!bluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(context as MainActivity, enableBtIntent, 1, null)
+            startActivityForResult(context as CollectActivity, enableBtIntent, 1, null)
         }
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -73,7 +73,7 @@ class BluetoothService(private val context: Context) {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                context as MainActivity,
+                context as CollectActivity,
                 arrayOf(Manifest.permission.BLUETOOTH_SCAN),
                 1
             )
@@ -95,7 +95,7 @@ class BluetoothService(private val context: Context) {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                context as MainActivity,
+                context as CollectActivity,
                 arrayOf(Manifest.permission.BLUETOOTH_SCAN),
                 1
             )
@@ -180,7 +180,7 @@ class BluetoothService(private val context: Context) {
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
-                    context as MainActivity,
+                    context as CollectActivity,
                     arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION),
                     1
                 )
