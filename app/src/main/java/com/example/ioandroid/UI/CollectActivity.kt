@@ -22,9 +22,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import com.example.ioandroid.R
 import com.example.ioandroid.adapter.ExpandableListAdapter
 import com.example.ioandroid.models.GpsEntry
-import com.example.ioandroid.R
 import com.example.ioandroid.services.TrackService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -82,7 +82,7 @@ class CollectActivity : AppCompatActivity() {
         }
 
         trackService = TrackService(this, false)
-        trackService.startService()
+        trackService.startService(0)
 
         btnTrack.isEnabled = false
         btnStopTrack.isEnabled = false

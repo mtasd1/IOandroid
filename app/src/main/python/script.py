@@ -1,7 +1,6 @@
 import pandas as pd
 import json
 import joblib
-import sklearn
 from os.path import dirname, join
 
 def preprocess_single_entry(file):

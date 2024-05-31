@@ -17,8 +17,4 @@ interface LocationService {
     fun getSatelliteInfo(): List<Triple<String, Int, Float>>
 
     fun getSatelliteInfoJSON(): JSONArray
-
-    fun getFormattedLocation(location: Location) {
-        //TODO: implement this method
-    }
 }

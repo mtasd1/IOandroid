@@ -1,17 +1,14 @@
 package com.example.ioandroid.UI
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
-import com.chaquo.python.PyObject
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
 import com.example.ioandroid.R
 import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.services.PredictService
 import com.example.ioandroid.services.TrackService
 import com.github.mikephil.charting.charts.HorizontalBarChart
 import com.github.mikephil.charting.components.XAxis
@@ -24,13 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.tensorflow.lite.Interpreter
 import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.channels.FileChannel
 
 
 class PredictActivity : AppCompatActivity() {
@@ -40,18 +31,11 @@ class PredictActivity : AppCompatActivity() {
     private lateinit var currentLocation: GpsEntry
 
     private lateinit var trackService: TrackService
+    private lateinit var predictService: PredictService
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
-    private val py = Python.getInstance()
-    private val module = py.getModule("script")
 
-    // Variables for the LSTM model
-    private lateinit var interpreter: Interpreter
-    private var inputSize = 0
-    private var outputSize = 0
-    private lateinit var input : ByteBuffer
-    private lateinit var output : ByteBuffer
-
+    private val nWarmUp = 3
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.layout_predict)
@@ -60,12 +44,6 @@ class PredictActivity : AppCompatActivity() {
         switchPredict = findViewById(R.id.switchPredict)
         buttonPredict = findViewById(R.id.btnTrack)
 
-        coroutineScope.launch(Dispatchers.Default) {
-            if(!Python.isStarted()) {
-                Python.start(AndroidPlatform(this@PredictActivity))
-            }
-        }
-
 
         switchPredict.setOnCheckedChangeListener { _, isChecked ->
             if (!isChecked) {
@@ -73,49 +51,24 @@ class PredictActivity : AppCompatActivity() {
             }
         }
 
-        // Initialize the LSTM model
-        val options = Interpreter.Options()
-        options.useNNAPI = false
-
-        interpreter = Interpreter(loadModelFile(this, "lstm_classifier.tflite"))
-        inputSize = interpreter.getInputTensor(0).shape().size
-        outputSize = interpreter.getOutputTensor(0).shape().size
-        input = ByteBuffer.allocateDirect(4 * inputSize)
-        output = ByteBuffer.allocateDirect(4 * outputSize)
-
         trackService = TrackService(this, true)
-        trackService.startService()
+        trackService.startService(nWarmUp)
 
-        // fetch the current location three times for warm-up immediately after the service is started
-        coroutineScope.launch {
-            repeat(3) {
-                currentLocation = trackLocation()
-            }
-        }
+        predictService = PredictService(this, this)
+        predictService.startService()
 
         buttonPredict.setOnClickListener {
+            //after refactor, we should only call function to get data and function to get prediction and to update the UI chart
 
-            coroutineScope.launch {
-                var gpsEntry = withContext(Dispatchers.Main) {
-                    trackLocation()
-                }
+            coroutineScope.launch(Dispatchers.IO) {
+                var gpsEntry = trackLocation()
+                val file = writeEntryToFile(gpsEntry)
+                val predictionRfc = predictService.predictWithRFC(file)
+                val predictionLstm = predictService.predictWithLSTM(file)
 
-                val file = File.createTempFile("gpsEntry", ".csv", cacheDir)
-                file.writeText(gpsEntry.toCSVHeader())
-                file.appendText("\n")
-                file.appendText(gpsEntry.toCSV())
-
-                val preprocess = preprocessSingleEntry(file)
-                val preprocessLSTM = preprocessLSTM(file)
-
-                coroutineScope.launch(Dispatchers.IO) {
-                    val predictionRfc = predictWithRFC(preprocess)
-                    val predictionLstm = predictWithLSTM(interpreter, preprocessLSTM)
-
-                    withContext(Dispatchers.Main) {
-                        updateBarChart(findViewById(R.id.barChartRFC), predictionRfc, "RFC")
-                        updateBarChart(findViewById(R.id.barChartLSTM), predictionLstm, "LSTM")
-                    }
+                withContext(Dispatchers.Main) {
+                    updateBarChart(findViewById(R.id.barChartRFC), predictionRfc, "RFC")
+                    updateBarChart(findViewById(R.id.barChartLSTM), predictionLstm, "LSTM")
                 }
             }
         }
@@ -131,52 +84,13 @@ class PredictActivity : AppCompatActivity() {
         }
     }
 
-    private fun preprocessSingleEntry(file: File): PyObject {
-        return module.callAttr("preprocess_single_entry", file.absolutePath)
+    private fun writeEntryToFile(gpsEntry: GpsEntry): File {
+        val file = File.createTempFile("gpsEntry", ".csv", cacheDir)
+        file.writeText(gpsEntry.toCSVHeader())
+        file.appendText("\n")
+        file.appendText(gpsEntry.toCSV())
+        return file
     }
-
-    private fun preprocessLSTM(file: File): PyObject {
-        return module.callAttr("preprocess_lstm", file.absolutePath)
-    }
-
-    private fun predictWithRFC(data: PyObject): FloatArray {
-        val prediction = module.callAttr("predict_rfc", data)
-        val list = prediction.asList()  // Converts PyObject containing a Python list to List<PyObject>
-        return list.map { it.asList() }  // Assuming prediction is a list of lists
-            .flatten()  // Flatten the list of lists to a single list
-            .map { it.toFloat() }  // Convert each PyObject to Float
-            .toFloatArray()  // Convert the List<Float> to FloatArray
-    }
-
-    private fun predictWithLSTM(interpreter: Interpreter, data: PyObject): FloatArray {
-        // Clear all buffers
-        clearBuffers()
-
-        // Convert PyObject to 1D array of floats
-        val data1D = data.toJava(Array<Float>::class.java).map { it }.toFloatArray()
-
-        // Ensure the ByteBuffer can hold all the data
-        input = ByteBuffer.allocateDirect(4 * data1D.size)
-        input.order(ByteOrder.LITTLE_ENDIAN) // Set the byte order of input buffer to little-endian
-
-        // Load data into input buffer
-        input.rewind()
-        for (value in data1D) {
-            input.putFloat(value)
-        }
-        input.rewind()
-
-        // Run the interpreter
-        interpreter.run(input, output)
-
-        // Extract the prediction
-        output.rewind()
-        output.order(ByteOrder.LITTLE_ENDIAN) // Set the byte order to little-endian
-
-
-        return FloatArray(outputSize) { output.float }
-    }
-
     private fun updateBarChart(chart: HorizontalBarChart, data: FloatArray, chartLabel: String) {
         val entries = data.mapIndexed { index, fl ->
             BarEntry(index.toFloat(), fl)
@@ -202,7 +116,7 @@ class PredictActivity : AppCompatActivity() {
         chart.animateY(200)
 
         // Customize the x-axis
-        val labels = arrayOf("Indoor", "Outdoor")  // Your custom labels
+        val labels = arrayOf("Indoor", "Outdoor")
 
         chart.xAxis.setDrawGridLines(false)
         chart.xAxis.setDrawAxisLine(false)
@@ -241,19 +155,4 @@ class PredictActivity : AppCompatActivity() {
         chart.invalidate() // Refresh the chart
     }
 
-    /** Memory-map the model file in Assets.  */
-    @Throws(IOException::class)
-    private fun loadModelFile(activity: Activity, filename: String): ByteBuffer {
-        val fileDescriptor = activity.assets.openFd(filename)
-        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
-        val fileChannel = inputStream.channel
-        val startOffset = fileDescriptor.startOffset
-        val declaredLength = fileDescriptor.declaredLength
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-    }
-
-    private fun clearBuffers() {
-        input.clear()
-        output.clear()
-    }
 }

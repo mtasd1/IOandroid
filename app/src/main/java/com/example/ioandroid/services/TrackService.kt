@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.util.ArrayMap
 import androidx.appcompat.app.AppCompatActivity
 import com.example.ioandroid.models.GpsEntry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.text.SimpleDateFormat
 
 class TrackService(private val appCompatActivity: AppCompatActivity, private val isPredict: Boolean) {
@@ -12,7 +14,9 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
     private lateinit var wifiService: WifiService
     private lateinit var bluetoothService: BluetoothService
 
-    fun startService() {
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
+    fun startService(nWarmUp: Int) {
         locationService = LocationManagerService(appCompatActivity, isPredict)
         locationService.getLocation()
 
@@ -23,6 +27,11 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
         wifiService.enableWifi()
 
         telephoneService = TelephoneService(appCompatActivity)
+
+        // Warm up the services by calling them nWarmUp times
+        for (i in 0 until nWarmUp) {
+            getGpsEntry("not", "relevant", "yet")
+        }
     }
 
     fun getGpsEntry(
@@ -31,10 +40,12 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
         selectedPeople: String
     ): GpsEntry {
         val gpsData = locationService.getLocation()
+        val blDevices = bluetoothService.getDevicesJSON()
+        val wifiNetworks = wifiService.getWifiNetworksJSON()
+        val cellStrength = telephoneService.getSignalStrength()
 
         val dateFormat = SimpleDateFormat("HH:mm:ss")
 
-        val cellStrength = telephoneService.getSignalStrength()
 
         val timeStampNetwork = gpsData.first?.time?.let { dateFormat.format(it) } ?: "N/A"
         val latitudeNetwork = gpsData.first?.latitude ?: 0.0
@@ -48,11 +59,6 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
         val satellites = locationService.getSatelliteInfoJSON()
         val nrSatellitesInFix = gpsExtras["satellites"] ?: satellites.length()
         val nrSatellitesInView = (locationService as LocationManagerService).getSatellitesInView()
-
-        bluetoothService.startDiscovery()
-        val blDevices = bluetoothService.getDevicesJSON()
-
-        val wifiNetworks = wifiService.getWifiNetworksJSON()
 
         return GpsEntry(
             selectedLocation,
