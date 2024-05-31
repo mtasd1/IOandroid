@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.UI
 
 import android.app.Activity
 import android.content.Intent
@@ -10,6 +10,9 @@ import androidx.appcompat.widget.SwitchCompat
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import com.example.ioandroid.R
+import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.services.TrackService
 import com.github.mikephil.charting.charts.HorizontalBarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
@@ -109,21 +112,16 @@ class PredictActivity : AppCompatActivity() {
 
                 val preprocess = preprocessSingleEntry(file)
                 val preprocessLSTM = preprocessLSTM(file)
-                println(preprocessLSTM.toString())
-                // Update the UI with the current location
 
-                //TODO investigate why the LSTM model is not precise and updates not often
+                coroutineScope.launch(Dispatchers.IO) {
+                    val predictionRfc = predictWithRFC(preprocess)
+                    val predictionLstm = predictWithLSTM(interpreter, preprocessLSTM)
 
-                val predictionRfc = predictWithRFC(preprocess)
-                val predictionLstm = predictWithLSTM(interpreter, preprocessLSTM)
-
-                //Update the UI with the prediction results
-                withContext(Dispatchers.Main) {
-                    updateBarChart(findViewById(R.id.barChartRFC), predictionRfc, "RFC")
-                    updateBarChart(findViewById(R.id.barChartLSTM), predictionLstm, "LSTM")
+                    withContext(Dispatchers.Main) {
+                        updateBarChart(findViewById(R.id.barChartRFC), predictionRfc, "RFC")
+                        updateBarChart(findViewById(R.id.barChartLSTM), predictionLstm, "LSTM")
+                    }
                 }
-                // TODO update the bar charts in the UI with the prediction
-                //findViewById<TextView>(R.id.locationTextView).text = "RFC: $predictionRfc \n LSTM: ${predictionLstm[0]} ${predictionLstm[1]}"
             }
         }
 
@@ -177,12 +175,7 @@ class PredictActivity : AppCompatActivity() {
         for (value in data1D) {
             input.putFloat(value)
         }
-
-        // print the content of the input buffer so that we can see if the data is loaded correctly
         input.rewind()
-        for (i in 0 until data1D.size) {
-            println("content $i = ${input.float}")
-        }
 
         // Run the interpreter
         interpreter.run(input, output)

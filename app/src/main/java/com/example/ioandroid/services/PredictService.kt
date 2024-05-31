@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.services
 
 class PredictService {
 

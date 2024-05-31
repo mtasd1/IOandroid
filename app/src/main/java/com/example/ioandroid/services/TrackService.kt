@@ -1,8 +1,9 @@
-package com.example.ioandroid
+package com.example.ioandroid.services
 
 import android.os.Bundle
 import android.util.ArrayMap
 import androidx.appcompat.app.AppCompatActivity
+import com.example.ioandroid.models.GpsEntry
 import java.text.SimpleDateFormat
 
 class TrackService(private val appCompatActivity: AppCompatActivity, private val isPredict: Boolean) {

@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.models
 
 data class GpsEntry(
     val label: String, val locationDescription: String, val people: String, val cellStrength: Int, val timeStampNetwork: String, val latitudeNetwork: Double, val longitudeNetwork: Double, val timeStampGPS: String, val latitudeGPS: Double, val longitudeGPS: Double, val nrSatellitesInView: Int, val nrSatellitesInFix: Any, val satellites: String, val bluetoothDevices: String, val wifiDevices: String

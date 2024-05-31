@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.services
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
@@ -13,6 +13,7 @@ import android.util.ArrayMap
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
+import com.example.ioandroid.UI.MainActivity
 import org.json.JSONArray
 import org.json.JSONObject
 

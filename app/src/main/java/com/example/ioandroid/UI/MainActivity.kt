@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.UI
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -22,6 +22,10 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import com.example.ioandroid.adapter.ExpandableListAdapter
+import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.R
+import com.example.ioandroid.services.TrackService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken

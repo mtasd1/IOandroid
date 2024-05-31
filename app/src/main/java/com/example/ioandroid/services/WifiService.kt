@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.services
 
 import android.Manifest
 import android.content.Context
@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import androidx.core.app.ActivityCompat
+import com.example.ioandroid.UI.MainActivity
 import org.json.JSONArray
 import org.json.JSONObject
 

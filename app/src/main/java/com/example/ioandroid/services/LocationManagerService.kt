@@ -1,4 +1,4 @@
-package com.example.ioandroid
+package com.example.ioandroid.services
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -13,10 +13,12 @@ import android.widget.Button
 import android.widget.Spinner
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import com.example.ioandroid.R
 import org.json.JSONArray
 import org.json.JSONObject
 
-class LocationManagerService(private val activity: Activity, private val isPredict: Boolean): LocationService {
+class LocationManagerService(private val activity: Activity, private val isPredict: Boolean):
+    LocationService {
     private val locationManager = activity.getSystemService(Activity.LOCATION_SERVICE) as LocationManager
     private var currentLocationGPS: Location? = null
     private var currentLocationNetwork: Location? = null
