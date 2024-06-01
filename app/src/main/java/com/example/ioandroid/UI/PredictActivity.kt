@@ -7,7 +7,7 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import com.example.ioandroid.R
-import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.models.DataEntry
 import com.example.ioandroid.services.PredictService
 import com.example.ioandroid.services.TrackService
 import com.github.mikephil.charting.charts.HorizontalBarChart
@@ -28,7 +28,7 @@ class PredictActivity : AppCompatActivity() {
     private lateinit var switchPredict: SwitchCompat
     private lateinit var buttonPredict: Button
 
-    private lateinit var currentLocation: GpsEntry
+    private lateinit var currentLocation: DataEntry
 
     private lateinit var trackService: TrackService
     private lateinit var predictService: PredictService
@@ -61,8 +61,8 @@ class PredictActivity : AppCompatActivity() {
             //after refactor, we should only call function to get data and function to get prediction and to update the UI chart
 
             coroutineScope.launch(Dispatchers.IO) {
-                var gpsEntry = trackLocation()
-                val file = writeEntryToFile(gpsEntry)
+                var dataEntry = trackLocation()
+                val file = writeEntryToFile(dataEntry)
                 val predictionRfc = predictService.predictWithRFC(file)
                 val predictionLstm = predictService.predictWithLSTM(file)
 
@@ -79,17 +79,17 @@ class PredictActivity : AppCompatActivity() {
         predictService.stopService()
     }
 
-    private suspend fun trackLocation(): GpsEntry {
+    private suspend fun trackLocation(): DataEntry {
          return withContext(Dispatchers.Main) {
-            trackService.getGpsEntry("not", "relevant", "anymore")
+            trackService.getDataEntry("not", "relevant", "anymore")
         }
     }
 
-    private fun writeEntryToFile(gpsEntry: GpsEntry): File {
+    private fun writeEntryToFile(dataEntry: DataEntry): File {
         val file = File.createTempFile("gpsEntry", ".csv", cacheDir)
-        file.writeText(gpsEntry.toCSVHeader())
+        file.writeText(dataEntry.toCSVHeader())
         file.appendText("\n")
-        file.appendText(gpsEntry.toCSV())
+        file.appendText(dataEntry.toCSV())
         return file
     }
     private fun updateBarChart(chart: HorizontalBarChart, data: FloatArray, chartLabel: String) {

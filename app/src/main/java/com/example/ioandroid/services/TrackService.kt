@@ -5,7 +5,12 @@ import android.os.Bundle
 import android.util.ArrayMap
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.models.DataEntry
+import com.example.ioandroid.services.sensorServices.BluetoothService
+import com.example.ioandroid.services.sensorServices.LocationManagerService
+import com.example.ioandroid.services.sensorServices.LocationService
+import com.example.ioandroid.services.sensorServices.TelephoneService
+import com.example.ioandroid.services.sensorServices.WifiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.text.SimpleDateFormat
@@ -33,16 +38,16 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
 
         // Warm up the services by calling them nWarmUp times
         for (i in 0 until nWarmUp) {
-            getGpsEntry("not", "relevant", "yet")
+            getDataEntry("not", "relevant", "yet")
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
-    fun getGpsEntry(
+    fun getDataEntry(
         selectedLocation: String,
         selectedDescription: String,
         selectedPeople: String
-    ): GpsEntry {
+    ): DataEntry {
         val gpsData = locationService.getLocation()
         val blDevices = bluetoothService.getDevicesJSON()
         val wifiNetworks = wifiService.getWifiNetworksJSON()
@@ -64,7 +69,7 @@ class TrackService(private val appCompatActivity: AppCompatActivity, private val
         val nrSatellitesInFix = gpsExtras["satellites"] ?: satellites.length()
         val nrSatellitesInView = (locationService as LocationManagerService).getSatellitesInView()
 
-        return GpsEntry(
+        return DataEntry(
             selectedLocation,
             selectedDescription,
             selectedPeople,

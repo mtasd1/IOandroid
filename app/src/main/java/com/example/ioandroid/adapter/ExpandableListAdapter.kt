@@ -6,9 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.models.DataEntry
 
-class ExpandableListAdapter(private val context: Context, private val entries: MutableList<GpsEntry>) :
+class ExpandableListAdapter(private val context: Context, private val entries: MutableList<DataEntry>) :
     BaseExpandableListAdapter() {
 
     override fun getGroupCount(): Int {

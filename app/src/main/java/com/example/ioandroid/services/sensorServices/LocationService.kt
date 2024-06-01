@@ -1,4 +1,4 @@
-package com.example.ioandroid.services
+package com.example.ioandroid.services.sensorServices
 
 import android.location.Location
 import org.json.JSONArray

@@ -1,4 +1,4 @@
-package com.example.ioandroid.services
+package com.example.ioandroid.services.sensorServices
 
 import android.Manifest
 import android.annotation.SuppressLint

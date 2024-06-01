@@ -24,7 +24,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import com.example.ioandroid.R
 import com.example.ioandroid.adapter.ExpandableListAdapter
-import com.example.ioandroid.models.GpsEntry
+import com.example.ioandroid.models.DataEntry
 import com.example.ioandroid.services.TrackService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -34,7 +34,7 @@ import java.text.SimpleDateFormat
 
 class CollectActivity : AppCompatActivity() {
 
-    private val gpsEntries = mutableListOf<GpsEntry>()
+    private val dataEntries = mutableListOf<DataEntry>()
     private lateinit var adapter: ExpandableListAdapter
 
     private lateinit var trackService: TrackService
@@ -118,7 +118,7 @@ class CollectActivity : AppCompatActivity() {
 
 
         // Adapter for the ListView
-        adapter = ExpandableListAdapter(this, gpsEntries)
+        adapter = ExpandableListAdapter(this, dataEntries)
         listView.setAdapter(adapter)
         listView.choiceMode = ListView.CHOICE_MODE_SINGLE
 
@@ -143,7 +143,7 @@ class CollectActivity : AppCompatActivity() {
         }
 
         listView.setOnItemLongClickListener { parent, _, position, _ ->
-            val selectedItem = parent.getItemAtPosition(position) as GpsEntry
+            val selectedItem = parent.getItemAtPosition(position) as DataEntry
             copyToClipboard(selectedItem.toString())
             true
         }
@@ -164,7 +164,7 @@ class CollectActivity : AppCompatActivity() {
             Toast.makeText(this, "Pos: $selectedGroupPosition", Toast.LENGTH_SHORT).show()
             if (selectedGroupPosition != AdapterView.INVALID_POSITION) {
                 adapter.removeGroup(selectedGroupPosition)
-                if (gpsEntries.isEmpty()) btnDelete.isEnabled = false
+                if (dataEntries.isEmpty()) btnDelete.isEnabled = false
                 saveEntriesToSharedPreferences()
             } else {
                 Toast.makeText(this, "No entry selected", Toast.LENGTH_SHORT).show()
@@ -173,14 +173,14 @@ class CollectActivity : AppCompatActivity() {
 
         // Set a listener for the Delete All button
         btnDeleteAll.setOnClickListener {
-            gpsEntries.clear()
+            dataEntries.clear()
             adapter.notifyDataSetChanged()
             saveEntriesToSharedPreferences()
         }
 
         // Set a listener for the Export button
         btnExport.setOnClickListener {
-            gpsEntries.clear()
+            dataEntries.clear()
             val entries = loadEntriesFromSharedPreferences()
             exportData(entries)
             Toast.makeText(this, "Exported to CSV", Toast.LENGTH_SHORT).show()
@@ -198,9 +198,9 @@ class CollectActivity : AppCompatActivity() {
         val selectedDescription = getSelectedDescription()
         val selectedPeople = getSelectedPeople()
 
-        val gpsEntry = trackService.getGpsEntry(selectedLocation, selectedDescription, selectedPeople)
+        val dataEntry = trackService.getDataEntry(selectedLocation, selectedDescription, selectedPeople)
 
-        gpsEntries.add(gpsEntry)
+        dataEntries.add(dataEntry)
         adapter.notifyDataSetChanged()
         saveEntriesToSharedPreferences()
     }
@@ -221,18 +221,18 @@ class CollectActivity : AppCompatActivity() {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val editor: SharedPreferences.Editor = prefs.edit()
         val gson = GsonBuilder().serializeSpecialFloatingPointValues().create()
-        val json = gson.toJson(gpsEntries)
+        val json = gson.toJson(dataEntries)
         editor.putString("entries", json)
         editor.apply()
     }
 
-    private fun loadEntriesFromSharedPreferences(): List<GpsEntry> {
+    private fun loadEntriesFromSharedPreferences(): List<DataEntry> {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val gson = Gson()
         val json = prefs.getString("entries", "")
-        val type = object : TypeToken<ArrayList<GpsEntry>>() {}.type
-        val savedEntries: List<GpsEntry> = gson.fromJson(json, type) ?: return emptyList()
-        gpsEntries.addAll(savedEntries)
+        val type = object : TypeToken<ArrayList<DataEntry>>() {}.type
+        val savedEntries: List<DataEntry> = gson.fromJson(json, type) ?: return emptyList()
+        dataEntries.addAll(savedEntries)
         adapter.notifyDataSetChanged()
         return savedEntries
     }
@@ -244,7 +244,7 @@ class CollectActivity : AppCompatActivity() {
         editor.apply()
     }
 
-    private fun exportData(entries: List<GpsEntry>) {
+    private fun exportData(entries: List<DataEntry>) {
         val resolver = contentResolver
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, "${getSelectedLocation()}_${formatTimestamp(System.currentTimeMillis())}.csv")
