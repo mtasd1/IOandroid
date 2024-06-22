@@ -163,7 +163,7 @@ class PredictActivity : AppCompatActivity() {
         stopButton.isEnabled = true
 
         csvFile = File(filesDir, "predictions.csv")
-        csvFile?.writeText("timestamp,predictionRFC_Indoor,predictionRFC_Outdoor,predictionLSTM_Indoor, predictionLSTM_Outdoor\n")
+        csvFile?.writeText("timestamp,predictionRFC_Indoor,predictionRFC_Outdoor,predictionLSTM_Indoor,predictionLSTM_Outdoor\n")
 
         handler = Handler(Looper.getMainLooper())
         predictionJob = coroutineScope.launch(Dispatchers.Main) {
